@@ -181,13 +181,13 @@
     .sel-item.off{opacity:.35;pointer-events:none;}
     .sel-name{font-weight:900;flex:1;font-size:.95rem;}
     .sel-chk{font-size:1.1rem;width:22px;text-align:center;}
-    .pos-slots{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
-    .pos-slot{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.08);border-radius:10px;}
-    .pos-icon{font-size:1.2rem;width:30px;text-align:center;flex-shrink:0;}
-    .pos-bonus{font-size:.68rem;color:var(--muted);font-weight:700;width:36px;flex-shrink:0;text-align:center;}
-    .pos-name{flex:1;font-weight:900;font-size:.92rem;}
-    .pos-name.empty{color:var(--muted);font-weight:500;font-style:italic;font-size:.82rem;}
-    .pos-clear{background:none;border:none;color:var(--muted);font-size:.95rem;cursor:pointer;padding:3px 5px;}
+    .pos-slots{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+    .pos-slot{display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,.05);border-left:3px solid rgba(255,255,255,.12);border-radius:6px;}
+    .pos-icon{font-size:1rem;width:26px;text-align:center;flex-shrink:0;}
+    .pos-bonus{font-size:.65rem;color:var(--muted);font-weight:700;width:32px;flex-shrink:0;text-align:center;}
+    .pos-name{flex:1;font-weight:900;font-size:.9rem;}
+    .pos-name.empty{color:var(--muted);font-weight:400;font-style:italic;font-size:.85rem;}
+    .pos-clear{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:2px 4px;}
     .assign-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
     .assign-btn{display:flex;align-items:center;gap:8px;padding:11px 12px;background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.08);border-radius:11px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:900;color:var(--text);transition:border-color .15s;-webkit-tap-highlight-color:transparent;}
     .assign-btn:active{border-color:var(--yellow);}
@@ -468,9 +468,10 @@
     const nextPos = [1,2,3,4].find(pos=>!positions[pos]);
     const filled  = Object.keys(positions).length;
 
+    const borderColors={1:'#FFD700',2:'#C0C0C0',3:'#CD7F32',4:'#667'};
     document.getElementById('posSlots').innerHTML=[1,2,3,4].map(pos=>{
       const pid=positions[pos], p=pid?players.find(x=>x.id===pid):null;
-      return `<div class="pos-slot">
+      return `<div class="pos-slot" style="border-left-color:${borderColors[pos]}">
         <span class="pos-icon">${icons[pos]}</span>
         <span class="pos-bonus">+${PLACE_POINTS[pos]}pts</span>
         <span class="pos-name${p?'':' empty'}">${p?p.avatar+' '+esc(p.name):'—'}</span>
