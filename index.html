@@ -4,762 +4,736 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mario Kart Leaderboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --dark: #1a1a2e;
-      --card: #16213e;
-      --border: #0f3460;
-      --text: #eaeaea;
-      --muted: #8899aa;
-      --yellow: #fbd000;
-      --red: #e52521;
-      --gold: #ffd700;
-      --silver: #c0c0c0;
-      --bronze: #cd7f32;
-      --green: #43b047;
+      --red: #E52521;
+      --blue: #049CD8;
+      --yellow: #FBD000;
+      --green: #43B047;
+      --dark: #0d0b1e;
+      --card: #13112a;
+      --border: #2a2550;
+      --text: #fff;
+      --muted: #8888aa;
+      --gold: #FFD700;
+      --silver: #C0C0C0;
+      --bronze: #CD7F32;
+      --purple: #a855f7;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       background: var(--dark);
       color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
       min-height: 100vh;
-      padding: 24px 16px 60px;
     }
 
+    /* ── HEADER ── */
     header {
+      background: var(--red);
+      background-image: repeating-conic-gradient(rgba(0,0,0,0.13) 0% 25%, transparent 0% 50%);
+      background-size: 24px 24px;
+      padding: 26px 20px 22px;
       text-align: center;
-      margin-bottom: 32px;
-    }
-
-    header h1 {
-      font-size: clamp(1.8rem, 5vw, 2.8rem);
-      font-weight: 900;
-      text-transform: uppercase;
-      background: linear-gradient(135deg, var(--red), var(--yellow));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      filter: drop-shadow(0 2px 6px rgba(251,208,0,0.25));
-      letter-spacing: -0.5px;
-    }
-
-    header p { color: var(--muted); margin-top: 4px; font-size: 0.88rem; }
-
-    .container { max-width: 680px; margin: 0 auto; }
-
-    .section-label {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: var(--muted);
-      margin-bottom: 10px;
-      margin-left: 2px;
-    }
-
-    /* ── Add player ── */
-    .add-section { margin-bottom: 32px; }
-
-    .avatar-select-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .avatar-opt {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      border: 2px solid transparent;
-      background: var(--card);
-      font-size: 1.4rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: border-color 0.15s, transform 0.1s;
-      flex-shrink: 0;
-    }
-
-    .avatar-opt:active { transform: scale(0.9); }
-    .avatar-opt.selected { border-color: var(--yellow); background: rgba(251,208,0,0.12); }
-
-    .add-row {
-      display: flex;
-      gap: 10px;
-    }
-
-    .add-row input {
-      flex: 1;
-      padding: 12px 16px;
-      border-radius: 10px;
-      border: 2px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.2s;
-      min-width: 0;
-    }
-
-    .add-row input:focus { border-color: var(--yellow); }
-    .add-row input::placeholder { color: var(--muted); }
-
-    .btn-primary {
-      padding: 12px 20px;
-      border-radius: 10px;
-      border: none;
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-      background: var(--yellow);
-      color: #111;
-      white-space: nowrap;
-      transition: transform 0.1s;
-      flex-shrink: 0;
-    }
-
-    .btn-primary:active { transform: scale(0.96); }
-
-    /* ── Leaderboard cards ── */
-    .leaderboard { display: flex; flex-direction: column; gap: 10px; }
-
-    .player-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--card);
-      border: 2px solid var(--border);
-      border-radius: 16px;
-      padding: 14px 14px;
-      cursor: pointer;
-      transition: border-color 0.2s, transform 0.1s;
-      animation: slideIn 0.25s ease;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .player-card:active { transform: scale(0.98); }
-    .player-card.rank-1 { border-color: var(--gold); }
-    .player-card.rank-2 { border-color: var(--silver); }
-    .player-card.rank-3 { border-color: var(--bronze); }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .card-rank {
-      font-size: 1.3rem;
-      width: 32px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .card-avatar {
-      font-size: 2rem;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.06);
-      border-radius: 12px;
-      flex-shrink: 0;
-    }
-
-    .card-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .card-name {
-      font-size: 1rem;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .card-places {
-      display: flex;
-      gap: 6px;
-      margin-top: 5px;
-      flex-wrap: wrap;
-    }
-
-    .place-chip {
-      font-size: 0.74rem;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .place-chip.c1 { background: rgba(255,215,0,0.18); color: var(--gold); }
-    .place-chip.c2 { background: rgba(192,192,192,0.18); color: var(--silver); }
-    .place-chip.c3 { background: rgba(205,127,50,0.22); color: var(--bronze); }
-
-    .card-points {
-      font-size: 1.8rem;
-      font-weight: 900;
-      color: var(--yellow);
-      flex-shrink: 0;
-      width: 52px;
-      text-align: right;
-    }
-
-    .card-chevron {
-      color: var(--muted);
-      font-size: 1rem;
-      flex-shrink: 0;
-      margin-left: 2px;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 48px 0;
-      color: var(--muted);
-    }
-
-    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
-
-    /* ── Overlay ── */
-    #overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 100;
-      backdrop-filter: blur(2px);
-    }
-
-    #overlay.open { display: block; }
-
-    /* ── Bottom sheet modal ── */
-    #playerModal {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      max-width: 680px;
-      margin: 0 auto;
-      background: #1e2a45;
-      border-radius: 24px 24px 0 0;
-      padding: 0 20px 40px;
-      z-index: 101;
-      transform: translateY(100%);
-      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-      max-height: 92vh;
-      overflow-y: auto;
-    }
-
-    #playerModal.open { transform: translateY(0); }
-
-    .modal-handle {
-      width: 40px;
-      height: 4px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 2px;
-      margin: 14px auto 20px;
-    }
-
-    .modal-top {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-
-    .modal-avatar-btn {
-      width: 64px;
-      height: 64px;
-      font-size: 2.4rem;
-      background: rgba(255,255,255,0.07);
-      border: 2px solid var(--border);
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: border-color 0.2s;
+      border-bottom: 5px solid #8B0000;
       position: relative;
     }
+    header::before { content: '🏁'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 1.8rem; opacity: 0.5; }
+    header::after  { content: '🏁'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 1.8rem; opacity: 0.5; }
+    .h-title {
+      font-family: 'Press Start 2P', cursive;
+      font-size: clamp(0.8rem, 3.2vw, 1.2rem);
+      color: var(--yellow);
+      line-height: 1.7;
+      text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    }
+    .h-sub { font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 5px; font-weight: 700; }
 
-    .modal-avatar-btn:after {
-      content: '✏️';
-      position: absolute;
-      bottom: -4px;
-      right: -4px;
-      font-size: 0.8rem;
-      background: var(--dark);
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* ── MAIN ── */
+    .main { max-width: 680px; margin: 0 auto; padding: 20px 16px 80px; }
+
+    /* ── RACE BUTTON ── */
+    .race-btn {
+      width: 100%; padding: 16px; margin-bottom: 28px;
+      background: var(--yellow); color: #111;
+      border: none; border-bottom: 4px solid #c8a000;
+      border-radius: 14px; font-family: 'Nunito', sans-serif;
+      font-size: 1.05rem; font-weight: 900;
+      cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+      transition: transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .race-btn:active { transform: translateY(3px); border-bottom-width: 1px; }
+
+    /* ── SECTION LABEL ── */
+    .slabel {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--muted); margin-bottom: 10px; margin-left: 2px; font-weight: 700;
     }
 
-    .modal-avatar-btn:active { border-color: var(--yellow); }
-
-    .modal-identity { flex: 1; min-width: 0; }
-
-    .modal-name {
-      font-size: 1.3rem;
-      font-weight: 800;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    /* ── LEADERBOARD ── */
+    .board { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+    .pcard {
+      display: flex; align-items: center; gap: 11px;
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 16px; padding: 13px 12px;
+      cursor: pointer; transition: transform 0.1s;
+      animation: popIn 0.25s ease; position: relative; overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
+    .pcard::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+    .pcard.r1::before { background: var(--gold); }
+    .pcard.r2::before { background: var(--silver); }
+    .pcard.r3::before { background: var(--bronze); }
+    .pcard.r1 { border-color: rgba(255,215,0,.35); }
+    .pcard.r2 { border-color: rgba(192,192,192,.25); }
+    .pcard.r3 { border-color: rgba(205,127,50,.25); }
+    .pcard:active { transform: scale(0.98); }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-    .modal-pts {
-      font-size: 0.9rem;
-      color: var(--muted);
-      margin-top: 2px;
+    .c-rank { font-size: 1.1rem; font-weight: 900; width: 28px; text-align: center; flex-shrink: 0; color: var(--muted); }
+    .c-rank.top { color: var(--text); }
+    .c-av { font-size: 1.9rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.06); border-radius: 11px; flex-shrink: 0; }
+    .c-info { flex: 1; min-width: 0; }
+    .c-name { font-size: 1rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .c-medals { display: flex; gap: 8px; margin-top: 4px; }
+    .mstat { display: flex; align-items: center; gap: 2px; font-size: 0.78rem; font-weight: 800; }
+    .mstat.dim { opacity: 0.3; }
+    .c-pts { text-align: right; flex-shrink: 0; }
+    .c-pts-num { font-size: 1.8rem; font-weight: 900; color: var(--yellow); line-height: 1; }
+    .c-pts-lbl { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
+    .c-chev { color: var(--muted); font-size: 1rem; flex-shrink: 0; margin-left: 2px; }
+
+    .empty { text-align: center; padding: 40px 0; color: var(--muted); }
+    .empty .icon { font-size: 3rem; margin-bottom: 10px; }
+
+    /* ── ADD PLAYER ── */
+    .add-section { margin-top: 28px; }
+    .add-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .add-row input {
+      flex: 1; min-width: 0; padding: 13px 15px;
+      border-radius: 12px; border: 2px solid var(--border);
+      background: var(--card); color: var(--text);
+      font-size: 1rem; font-family: 'Nunito', sans-serif; font-weight: 700;
+      outline: none; transition: border-color 0.2s;
     }
-
-    .modal-pts span { color: var(--yellow); font-weight: 700; }
-
-    /* Avatar picker inside modal */
-    .modal-avatar-picker {
-      display: none;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 18px;
-      padding: 14px;
-      background: rgba(255,255,255,0.04);
-      border-radius: 14px;
-      border: 1px solid var(--border);
+    .add-row input:focus { border-color: var(--yellow); }
+    .add-row input::placeholder { color: var(--muted); font-weight: 500; }
+    .btn-next {
+      padding: 13px 18px; border-radius: 12px; border: none;
+      background: var(--blue); color: #fff;
+      font-size: 0.95rem; font-weight: 900; font-family: 'Nunito', sans-serif;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: transform 0.1s;
     }
+    .btn-next:active { transform: scale(0.96); }
 
-    .modal-avatar-picker.open { display: flex; }
+    .av-step { display: none; animation: fadeUp 0.22s ease; }
+    .av-step.open { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Breakdown row */
-    .breakdown-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-bottom: 22px;
+    .av-step-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .chosen-name { color: var(--yellow); font-weight: 900; }
+
+    .av-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+      gap: 7px; max-height: 210px; overflow-y: auto; margin-bottom: 12px; padding: 2px;
     }
-
-    .breakdown-cell {
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 10px 6px;
-      text-align: center;
+    .av-opt {
+      width: 46px; height: 46px; border-radius: 11px;
+      border: 2px solid transparent; background: var(--card);
+      font-size: 1.35rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s, transform 0.1s;
     }
+    .av-opt:active { transform: scale(0.88); }
+    .av-opt.sel { border-color: var(--yellow); background: rgba(251,208,0,.12); }
 
-    .breakdown-cell .medal { font-size: 1.4rem; }
-    .breakdown-cell .count { font-size: 1.2rem; font-weight: 800; margin-top: 2px; }
-    .breakdown-cell .label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .breakdown-cell.c1 { background: rgba(255,215,0,0.12); }
-    .breakdown-cell.c2 { background: rgba(192,192,192,0.1); }
-    .breakdown-cell.c3 { background: rgba(205,127,50,0.12); }
-
-    /* Place buttons */
-    .place-buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-bottom: 12px;
+    .btn-add {
+      width: 100%; padding: 13px; border-radius: 12px;
+      border: none; border-bottom: 3px solid #2d7a31;
+      background: var(--green); color: #fff;
+      font-size: 1rem; font-weight: 900; font-family: 'Nunito', sans-serif;
+      cursor: pointer; transition: transform 0.1s;
     }
+    .btn-add:active { transform: translateY(2px); border-bottom-width: 1px; }
 
-    .place-btn {
-      padding: 14px 4px;
-      border-radius: 14px;
-      border: none;
-      font-weight: 800;
-      font-size: 0.9rem;
-      cursor: pointer;
-      line-height: 1.4;
-      transition: transform 0.1s, filter 0.1s;
-      text-align: center;
+    /* ── OVERLAY ── */
+    #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 100; backdrop-filter: blur(3px); }
+    #overlay.open { display: block; }
+
+    /* ── BOTTOM SHEET ── */
+    .sheet {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      max-width: 680px; margin: 0 auto;
+      background: #131128; border-radius: 24px 24px 0 0;
+      border-top: 2px solid var(--border);
+      padding: 0 20px 44px;
+      z-index: 101; transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+      max-height: 92vh; overflow-y: auto;
     }
+    .sheet.open { transform: translateY(0); }
+    .s-handle { width: 40px; height: 4px; background: rgba(255,255,255,.18); border-radius: 2px; margin: 14px auto 20px; }
 
-    .place-btn:active { transform: scale(0.93); filter: brightness(1.15); }
-    .place-btn small { display: block; font-size: 0.72rem; font-weight: 500; opacity: 0.8; }
+    /* ── RACE WIZARD ── */
+    .rstep { display: none; }
+    .rstep.active { display: block; }
+    .rs-title { font-family: 'Press Start 2P', cursive; font-size: 0.68rem; color: var(--yellow); text-align: center; margin-bottom: 5px; letter-spacing: 1px; }
+    .rs-sub { text-align: center; color: var(--muted); font-size: 0.83rem; font-weight: 700; margin-bottom: 16px; }
 
-    .pb1 { background: var(--gold); color: #111; }
-    .pb2 { background: var(--silver); color: #111; }
-    .pb3 { background: var(--bronze); color: #fff; }
-    .pb4 { background: #445; color: var(--text); border: 2px solid #667; }
+    .sel-counter { text-align: center; font-size: 0.85rem; color: var(--muted); font-weight: 700; margin-bottom: 12px; }
+    .sel-counter strong { color: var(--yellow); font-size: 1rem; }
 
-    .undo-btn {
-      width: 100%;
-      padding: 13px;
-      border-radius: 12px;
-      border: 2px solid #445;
-      background: transparent;
-      color: var(--muted);
-      font-size: 0.92rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-bottom: 24px;
-      transition: border-color 0.2s, color 0.2s;
+    .sel-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .sel-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; background: var(--card);
+      border: 2px solid var(--border); border-radius: 12px;
+      cursor: pointer; transition: border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
     }
+    .sel-item.on { border-color: var(--yellow); background: rgba(251,208,0,.08); }
+    .sel-item.off { opacity: 0.38; pointer-events: none; }
+    .sel-name { font-weight: 900; flex: 1; font-size: 0.95rem; }
+    .sel-chk { font-size: 1.1rem; width: 22px; text-align: center; }
 
-    .undo-btn:hover { border-color: #667; color: var(--text); }
-
-    .delete-btn {
-      width: 100%;
-      padding: 13px;
-      border-radius: 12px;
-      border: 2px solid #c0392b;
-      background: transparent;
-      color: #e74c3c;
-      font-size: 0.92rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s;
+    /* Position slots */
+    .pos-slots { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
+    .pos-slot {
+      display: flex; align-items: center; gap: 11px;
+      padding: 12px 14px; background: var(--card);
+      border: 2px solid var(--border); border-radius: 12px;
     }
+    .pos-icon { font-size: 1.3rem; width: 34px; text-align: center; flex-shrink: 0; }
+    .pos-bonus { font-size: 0.7rem; color: var(--muted); font-weight: 700; width: 40px; flex-shrink: 0; text-align: center; }
+    .pos-name { flex: 1; font-weight: 900; font-size: 0.95rem; }
+    .pos-name.empty { color: var(--muted); font-weight: 500; font-style: italic; font-size: 0.85rem; }
+    .pos-clear { background: none; border: none; color: var(--muted); font-size: 1rem; cursor: pointer; padding: 4px 6px; }
 
-    .delete-btn:hover { background: rgba(231,76,60,0.12); }
+    .assign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .assign-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 12px; background: var(--card);
+      border: 2px solid var(--border); border-radius: 11px;
+      cursor: pointer; font-family: 'Nunito', sans-serif;
+      font-size: 0.88rem; font-weight: 900; color: var(--text);
+      transition: border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .assign-btn:active { border-color: var(--yellow); }
+    .assign-av { font-size: 1.3rem; }
 
-    /* Toast */
+    /* Predictions */
+    .pred-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .pred-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; background: var(--card);
+      border: 2px solid var(--border); border-radius: 12px;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pred-item.on { border-color: var(--purple); background: rgba(168,85,247,.1); }
+    .pred-badge { font-size: 0.75rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: rgba(168,85,247,.2); color: #c084fc; white-space: nowrap; }
+
+    /* Nav buttons */
+    .rnav { display: flex; gap: 10px; }
+    .btn-back {
+      padding: 13px 16px; border-radius: 12px;
+      border: 2px solid var(--border); background: transparent;
+      color: var(--muted); font-size: 0.9rem; font-weight: 700;
+      font-family: 'Nunito', sans-serif; cursor: pointer; flex-shrink: 0;
+    }
+    .btn-fwd {
+      flex: 1; padding: 13px; border-radius: 12px;
+      border: none; border-bottom: 3px solid #c8a000;
+      background: var(--yellow); color: #111;
+      font-size: 0.95rem; font-weight: 900; font-family: 'Nunito', sans-serif;
+      cursor: pointer; transition: transform 0.1s;
+    }
+    .btn-fwd:active { transform: translateY(2px); border-bottom-width: 1px; }
+    .btn-fwd:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-submit {
+      flex: 1; padding: 13px; border-radius: 12px;
+      border: none; border-bottom: 3px solid #8B0000;
+      background: var(--red); color: #fff;
+      font-size: 0.95rem; font-weight: 900; font-family: 'Nunito', sans-serif;
+      cursor: pointer; transition: transform 0.1s;
+    }
+    .btn-submit:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+    /* ── PLAYER MODAL ── */
+    .pm-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .pm-av-btn {
+      width: 60px; height: 60px; font-size: 2.1rem;
+      background: rgba(255,255,255,.06); border: 2px solid var(--border);
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; position: relative; transition: border-color 0.2s;
+    }
+    .pm-av-btn::after { content: '✏️'; position: absolute; bottom: -5px; right: -5px; font-size: 0.72rem; }
+    .pm-av-btn:active { border-color: var(--yellow); }
+    .pm-info { flex: 1; min-width: 0; }
+    .pm-name { font-size: 1.2rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pm-sub { font-size: 0.83rem; color: var(--muted); margin-top: 2px; font-weight: 700; }
+    .pm-sub span { color: var(--yellow); font-weight: 900; }
+
+    .pm-av-picker {
+      display: none; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+      gap: 6px; margin-bottom: 14px; padding: 12px;
+      background: rgba(255,255,255,.03); border-radius: 13px; border: 1px solid var(--border);
+    }
+    .pm-av-picker.open { display: grid; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 18px; }
+    .stat-cell { background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px 5px; text-align: center; }
+    .stat-cell .si { font-size: 1.3rem; }
+    .stat-cell .sn { font-size: 1.2rem; font-weight: 900; margin-top: 2px; }
+    .stat-cell .sl { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .stat-cell.g { background: rgba(255,215,0,.1); }
+    .stat-cell.s { background: rgba(192,192,192,.07); }
+    .stat-cell.b { background: rgba(205,127,50,.1); }
+    .stat-cell.p { background: rgba(168,85,247,.1); }
+
+    .btn-undo {
+      width: 100%; padding: 12px; border-radius: 12px;
+      border: 2px solid var(--border); background: transparent;
+      color: var(--muted); font-size: 0.9rem; font-weight: 700;
+      font-family: 'Nunito', sans-serif; cursor: pointer;
+      transition: border-color 0.2s; margin-bottom: 10px;
+    }
+    .btn-undo:hover { border-color: #555; color: var(--text); }
+    .btn-del {
+      width: 100%; padding: 12px; border-radius: 12px;
+      border: 2px solid rgba(231,76,60,.45); background: transparent;
+      color: #e74c3c; font-size: 0.9rem; font-weight: 700;
+      font-family: 'Nunito', sans-serif; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-del:hover { background: rgba(231,76,60,.1); }
+
+    /* ── TOAST ── */
     #toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
+      position: fixed; bottom: 24px; left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: #2ecc71;
-      color: #fff;
-      padding: 10px 22px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.9rem;
+      background: var(--green); color: #fff;
+      padding: 10px 22px; border-radius: 999px;
+      font-weight: 900; font-size: 0.88rem;
       transition: transform 0.3s ease;
-      pointer-events: none;
-      z-index: 200;
-      white-space: nowrap;
+      pointer-events: none; z-index: 200; white-space: nowrap;
+      font-family: 'Nunito', sans-serif;
     }
-
     #toast.show { transform: translateX(-50%) translateY(0); }
 
     @media (max-width: 380px) {
-      .place-btn { font-size: 0.8rem; padding: 12px 2px; }
-      .card-points { font-size: 1.5rem; width: 44px; }
+      .assign-grid { grid-template-columns: 1fr; }
+      .c-pts-num { font-size: 1.5rem; }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>🏎️ Mario Kart Leaderboard</h1>
-  <p>Tap a player to add race results</p>
+  <div class="h-title">MARIO KART<br>LEADERBOARD</div>
+  <div class="h-sub" id="headerSub">0 players · 0 races</div>
 </header>
 
-<div class="container">
+<div class="main">
+  <button class="race-btn" onclick="openRaceModal()">🏁 Start New Race</button>
+
+  <p class="slabel">🏆 Standings</p>
+  <div class="board" id="board"></div>
+  <div class="empty" id="emptyState">
+    <div class="icon">🎮</div>
+    <div>No players yet — add someone below!</div>
+  </div>
 
   <div class="add-section">
-    <p class="section-label">Choose avatar</p>
-    <div class="avatar-select-row" id="addAvatarRow"></div>
-    <p class="section-label" style="margin-top:12px">Add player</p>
+    <p class="slabel">➕ Add player</p>
     <div class="add-row">
-      <input type="text" id="playerNameInput" placeholder="Enter player name…" maxlength="30" />
-      <button class="btn-primary" onclick="addPlayer()">+ Add</button>
+      <input type="text" id="nameInput" placeholder="Enter player name…" maxlength="30" />
+      <button class="btn-next" onclick="goAvatarStep()">Next →</button>
+    </div>
+    <div class="av-step" id="avStep">
+      <div class="av-step-hdr">
+        <span class="slabel" style="margin:0">Avatar for <span class="chosen-name" id="chosenName"></span></span>
+      </div>
+      <div class="av-grid" id="avGrid"></div>
+      <button class="btn-add" onclick="confirmAdd()">✓ Add Player</button>
     </div>
   </div>
-
-  <p class="section-label">Rankings</p>
-  <div class="leaderboard" id="leaderboard"></div>
-  <div class="empty-state" id="emptyState" style="display:none">
-    <div class="icon">🎮</div>
-    <div>No players yet — add someone above!</div>
-  </div>
-
 </div>
 
 <!-- Overlay -->
-<div id="overlay" onclick="closeModal()"></div>
+<div id="overlay" onclick="overlayClick()"></div>
 
-<!-- Bottom sheet -->
-<div id="playerModal">
-  <div class="modal-handle"></div>
+<!-- Race Modal -->
+<div class="sheet" id="raceModal">
+  <div class="s-handle"></div>
 
-  <div class="modal-top">
-    <div class="modal-avatar-btn" id="modalAvatarBtn" onclick="toggleAvatarPicker()">
-      <span id="modalAvatarEmoji">🔴</span>
-    </div>
-    <div class="modal-identity">
-      <div class="modal-name" id="modalName">—</div>
-      <div class="modal-pts">Total: <span id="modalPts">0</span> pts · <span id="modalRaces">0</span> races</div>
-    </div>
-  </div>
-
-  <div class="modal-avatar-picker" id="modalAvatarPicker"></div>
-
-  <div class="breakdown-grid">
-    <div class="breakdown-cell c1">
-      <div class="medal">🥇</div>
-      <div class="count" id="bd1">0</div>
-      <div class="label">1st</div>
-    </div>
-    <div class="breakdown-cell c2">
-      <div class="medal">🥈</div>
-      <div class="count" id="bd2">0</div>
-      <div class="label">2nd</div>
-    </div>
-    <div class="breakdown-cell c3">
-      <div class="medal">🥉</div>
-      <div class="count" id="bd3">0</div>
-      <div class="label">3rd</div>
-    </div>
-    <div class="breakdown-cell">
-      <div class="medal">4️⃣</div>
-      <div class="count" id="bd4">0</div>
-      <div class="label">4th</div>
+  <!-- Step 1: pick racers -->
+  <div class="rstep active" id="rs1">
+    <div class="rs-title">🏁 New Race</div>
+    <div class="rs-sub">Select exactly 4 players who are racing</div>
+    <div class="sel-counter"><strong id="selCount">0</strong> / 4 selected</div>
+    <div class="sel-list" id="selList"></div>
+    <div class="rnav">
+      <button class="btn-back" onclick="closeRaceModal()">✕ Cancel</button>
+      <button class="btn-fwd" id="s1next" onclick="goStep2()" disabled>Assign Positions →</button>
     </div>
   </div>
 
-  <p class="section-label">Add race result</p>
-  <div class="place-buttons">
-    <button class="place-btn pb1" onclick="modalAddPoints(1)">🥇 1st<small>+1 pt</small></button>
-    <button class="place-btn pb2" onclick="modalAddPoints(2)">🥈 2nd<small>+2 pts</small></button>
-    <button class="place-btn pb3" onclick="modalAddPoints(3)">🥉 3rd<small>+3 pts</small></button>
-    <button class="place-btn pb4" onclick="modalAddPoints(4)">4th<small>+4 pts</small></button>
+  <!-- Step 2: assign positions -->
+  <div class="rstep" id="rs2">
+    <div class="rs-title">🏎️ Positions</div>
+    <div class="rs-sub">Tap a player to place them — fastest first</div>
+    <div class="pos-slots" id="posSlots"></div>
+    <p class="slabel" style="margin-bottom:8px" id="remainLabel">Tap to assign</p>
+    <div class="assign-grid" id="assignGrid"></div>
+    <div class="rnav">
+      <button class="btn-back" onclick="goStep1()">← Back</button>
+      <button class="btn-fwd" id="s2next" onclick="goStep3()" disabled>Predictions →</button>
+    </div>
   </div>
 
-  <button class="undo-btn" onclick="modalRemovePoints()">− Remove 1 point</button>
-  <button class="delete-btn" onclick="modalDeletePlayer()">🗑 Remove player</button>
+  <!-- Step 3: predictions -->
+  <div class="rstep" id="rs3">
+    <div class="rs-title">⭐ Predictions</div>
+    <div class="rs-sub">Who predicted correctly? (+2 pts each, once per race)</div>
+    <div class="pred-list" id="predList"></div>
+    <div class="rnav">
+      <button class="btn-back" onclick="goStep2()">← Back</button>
+      <button class="btn-submit" onclick="submitRace()">🏁 Submit Race</button>
+    </div>
+  </div>
+</div>
+
+<!-- Player Modal -->
+<div class="sheet" id="playerModal">
+  <div class="s-handle"></div>
+  <div class="pm-top">
+    <div class="pm-av-btn" id="pmAvBtn" onclick="togglePmPicker()">
+      <span id="pmAvEmoji"></span>
+    </div>
+    <div class="pm-info">
+      <div class="pm-name" id="pmName"></div>
+      <div class="pm-sub"><span id="pmPts">0</span> pts · <span id="pmRaces">0</span> races</div>
+    </div>
+  </div>
+  <div class="pm-av-picker" id="pmAvPicker"></div>
+  <div class="stats-grid">
+    <div class="stat-cell g"><div class="si">🥇</div><div class="sn" id="pm1">0</div><div class="sl">1st</div></div>
+    <div class="stat-cell s"><div class="si">🥈</div><div class="sn" id="pm2">0</div><div class="sl">2nd</div></div>
+    <div class="stat-cell b"><div class="si">🥉</div><div class="sn" id="pm3">0</div><div class="sl">3rd</div></div>
+    <div class="stat-cell p"><div class="si">⭐</div><div class="sn" id="pmPred">0</div><div class="sl">Preds</div></div>
+  </div>
+  <button class="btn-undo" onclick="pmUndo()">− Remove 1 point</button>
+  <button class="btn-del"  onclick="pmDelete()">🗑 Remove player</button>
 </div>
 
 <div id="toast"></div>
 
 <script>
+  const PLACE_POINTS = {1:4, 2:3, 3:2, 4:1};
+  const PRED_BONUS = 2;
+
   const AVATARS = [
-    '🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪',
-    '🐱','🐶','🦊','🐸','🐼','🦁','🐯','🐨',
-    '🚗','🏎️','🚀','⭐','🔥','💎','👾','🎭'
+    '😀','😃','😄','😁','😆','🤣','😊','😇','🥰','😍','🤩','😎',
+    '🤓','🧐','😏','😌','🤗','🥳','😜','🤪','😝','🤑','😤','😡',
+    '🥶','😱','🤯','🥸','👻','💀','🤖','👾','😈','🤠','🤡','🥹',
+    '🐱','🐶','🦊','🐸','🐼','🦁','🐯','🐨','🐮','🐷','🐰','🐹',
+    '🐻','🐺','🦝','🦄','🐉','🦋','🦖','🐊','🦍','🐧','🦆','🦅',
+    '🏎️','🚗','🚀','⭐','🌟','🔥','💎','👑','🍄','🪙','🏆','⚡',
   ];
 
-  const PLACE_POINTS = { 1: 1, 2: 2, 3: 3, 4: 4 };
+  let players   = [];
+  let raceCount = 0;
 
-  let players = [];
-  let selectedAddAvatar = AVATARS[0];
-  let activePlayerId = null;
+  // add-player wizard
+  let pendingName   = '';
+  let addAvatar     = AVATARS[0];
 
-  // ── Persistence ──────────────────────────────────────
-  function save() { localStorage.setItem('mk_v2', JSON.stringify(players)); }
+  // race wizard
+  let racerIds    = [];
+  let positions   = {};   // { 1: id, 2: id, 3: id, 4: id }
+  let predictions = new Set();
 
+  // player modal
+  let activeId = null;
+
+  // ── Storage ──────────────────────────────────────────
+  function save() {
+    localStorage.setItem('mk_v4', JSON.stringify({players, raceCount}));
+  }
   function load() {
     try {
-      const raw = localStorage.getItem('mk_v2');
-      if (raw) players = JSON.parse(raw);
-      // migrate old saves that had no places/avatar
-      players = players.map(p => ({
-        avatar: '🔴',
-        places: { 1: 0, 2: 0, 3: 0, 4: 0 },
-        ...p
-      }));
-    } catch (_) { players = []; }
+      const d = JSON.parse(localStorage.getItem('mk_v4') || 'null');
+      if (d) {
+        players   = (d.players || []).map(p => ({
+          avatar:'😀', places:{1:0,2:0,3:0,4:0}, predictions:0, races:0, points:0, ...p
+        }));
+        raceCount = d.raceCount || 0;
+      }
+    } catch(_) {}
   }
 
-  // ── Avatar row (add-player section) ──────────────────
-  function buildAddAvatarRow() {
-    const row = document.getElementById('addAvatarRow');
-    row.innerHTML = AVATARS.map(a => `
-      <button class="avatar-opt${a === selectedAddAvatar ? ' selected' : ''}"
-              onclick="selectAddAvatar('${a}')">${a}</button>
-    `).join('');
+  // ── Add-player wizard ────────────────────────────────
+  function buildAvGrid(containerId, current, onSelect) {
+    document.getElementById(containerId).innerHTML = AVATARS.map((a,i) =>
+      `<button class="av-opt${a===current?' sel':''}" data-i="${i}" onclick="${onSelect}(this.dataset.i)">${a}</button>`
+    ).join('');
   }
 
-  function selectAddAvatar(emoji) {
-    selectedAddAvatar = emoji;
-    buildAddAvatarRow();
+  function selectAddAv(i)  { addAvatar = AVATARS[i]; buildAvGrid('avGrid', addAvatar, 'selectAddAv'); }
+
+  function goAvatarStep() {
+    const inp  = document.getElementById('nameInput');
+    const name = inp.value.trim();
+    if (!name) { inp.focus(); return; }
+    if (players.find(p => p.name.toLowerCase() === name.toLowerCase())) { toast('Player already exists!'); return; }
+    pendingName = name;
+    addAvatar   = AVATARS[0];
+    document.getElementById('chosenName').textContent = name;
+    buildAvGrid('avGrid', addAvatar, 'selectAddAv');
+    const step = document.getElementById('avStep');
+    step.classList.add('open');
+    step.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
 
-  // ── Add player ───────────────────────────────────────
-  function addPlayer() {
-    const input = document.getElementById('playerNameInput');
-    const name = input.value.trim();
-    if (!name) return;
-    if (players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
-      toast('Player already exists!');
-      return;
-    }
-    players.push({
-      id: Date.now(),
-      name,
-      avatar: selectedAddAvatar,
-      points: 0,
-      races: 0,
-      places: { 1: 0, 2: 0, 3: 0, 4: 0 }
+  function confirmAdd() {
+    if (!pendingName) return;
+    players.push({id: Date.now(), name: pendingName, avatar: addAvatar, points:0, races:0, places:{1:0,2:0,3:0,4:0}, predictions:0});
+    document.getElementById('nameInput').value = '';
+    document.getElementById('avStep').classList.remove('open');
+    pendingName = '';
+    save(); render();
+    toast(`${players[players.length-1].name} joined! 🎉`);
+  }
+
+  // ── Race modal ────────────────────────────────────────
+  function openRaceModal() {
+    if (players.length < 2) { toast('Add at least 2 players first!'); return; }
+    racerIds=[]; positions={}; predictions=new Set();
+    showStep(1); buildStep1();
+    openSheet('raceModal');
+  }
+  function closeRaceModal() { closeSheet('raceModal'); }
+
+  function showStep(n) {
+    ['rs1','rs2','rs3'].forEach((id,i) => document.getElementById(id).classList.toggle('active', i+1===n));
+  }
+
+  // Step 1
+  function buildStep1() {
+    document.getElementById('selCount').textContent = racerIds.length;
+    document.getElementById('selList').innerHTML = players.map(p => {
+      const on  = racerIds.includes(p.id);
+      const off = !on && racerIds.length >= 4;
+      return `<div class="sel-item${on?' on':''}${off?' off':''}" onclick="toggleRacer(${p.id})">
+        <span style="font-size:1.5rem">${p.avatar}</span>
+        <span class="sel-name">${esc(p.name)}</span>
+        <span class="sel-chk">${on?'✅':''}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('s1next').disabled = racerIds.length !== 4;
+  }
+  function toggleRacer(id) {
+    racerIds = racerIds.includes(id) ? racerIds.filter(r=>r!==id) : racerIds.length<4 ? [...racerIds,id] : racerIds;
+    buildStep1();
+  }
+  function goStep1() { showStep(1); buildStep1(); }
+
+  // Step 2
+  function goStep2() { positions={}; showStep(2); buildStep2(); }
+  function buildStep2() {
+    const assigned   = Object.values(positions);
+    const remaining  = racerIds.filter(id => !assigned.includes(id));
+    const icons      = {1:'🥇',2:'🥈',3:'🥉',4:'4️⃣'};
+    const nextPos    = [1,2,3,4].find(p => !positions[p]);
+
+    document.getElementById('posSlots').innerHTML = [1,2,3,4].map(pos => {
+      const pid = positions[pos];
+      const p   = pid ? players.find(x=>x.id===pid) : null;
+      return `<div class="pos-slot">
+        <span class="pos-icon">${icons[pos]}</span>
+        <span class="pos-bonus">+${PLACE_POINTS[pos]}pts</span>
+        <span class="pos-name${p?'':' empty'}">${p ? p.avatar+' '+esc(p.name) : 'Not assigned'}</span>
+        ${p ? `<button class="pos-clear" onclick="clearPos(${pos})">✕</button>` : ''}
+      </div>`;
+    }).join('');
+
+    document.getElementById('remainLabel').textContent = nextPos
+      ? `Tap to assign ${icons[nextPos]} ${['','1st','2nd','3rd','4th'][nextPos]}`
+      : 'All assigned!';
+
+    document.getElementById('assignGrid').innerHTML = remaining.map(id => {
+      const p = players.find(x=>x.id===id);
+      return `<button class="assign-btn" onclick="assignPos(${p.id})">
+        <span class="assign-av">${p.avatar}</span><span>${esc(p.name)}</span>
+      </button>`;
+    }).join('');
+
+    document.getElementById('s2next').disabled = Object.keys(positions).length !== 4;
+  }
+  function assignPos(pid) {
+    const next = [1,2,3,4].find(p => !positions[p]);
+    if (next) { positions[next] = pid; buildStep2(); }
+  }
+  function clearPos(pos) { delete positions[pos]; buildStep2(); }
+
+  // Step 3
+  function goStep3() { predictions=new Set(); showStep(3); buildStep3(); }
+  function buildStep3() {
+    document.getElementById('predList').innerHTML = players.map(p => `
+      <div class="pred-item${predictions.has(p.id)?' on':''}" onclick="togglePred(${p.id})">
+        <span style="font-size:1.5rem">${p.avatar}</span>
+        <span style="font-weight:900;flex:1">${esc(p.name)}</span>
+        ${predictions.has(p.id) ? '<span class="pred-badge">⭐ +2 pts</span>' : ''}
+      </div>`).join('');
+  }
+  function togglePred(id) {
+    predictions.has(id) ? predictions.delete(id) : predictions.add(id);
+    buildStep3();
+  }
+
+  function submitRace() {
+    [1,2,3,4].forEach(pos => {
+      const p = players.find(x => x.id===positions[pos]);
+      if (!p) return;
+      p.points += PLACE_POINTS[pos];
+      p.races  += 1;
+      p.places[pos] = (p.places[pos]||0) + 1;
     });
-    input.value = '';
-    save();
-    render();
-    toast(`${name} added!`);
+    predictions.forEach(id => {
+      const p = players.find(x=>x.id===id);
+      if (p) { p.points += PRED_BONUS; p.predictions = (p.predictions||0)+1; }
+    });
+    raceCount++;
+    save(); closeRaceModal(); render();
+    const w = players.find(x=>x.id===positions[1]);
+    toast(`Race ${raceCount} done! 🥇 ${w?w.name:''}`);
   }
 
-  // ── Modal ─────────────────────────────────────────────
-  function openModal(id) {
-    activePlayerId = id;
-    const p = players.find(x => x.id === id);
+  // ── Player modal ──────────────────────────────────────
+  function openPlayerModal(id) {
+    activeId = id;
+    const p  = players.find(x=>x.id===id);
     if (!p) return;
+    document.getElementById('pmAvEmoji').textContent = p.avatar;
+    document.getElementById('pmName').textContent    = p.name;
+    document.getElementById('pmPts').textContent     = p.points;
+    document.getElementById('pmRaces').textContent   = p.races;
+    document.getElementById('pm1').textContent       = p.places[1];
+    document.getElementById('pm2').textContent       = p.places[2];
+    document.getElementById('pm3').textContent       = p.places[3];
+    document.getElementById('pmPred').textContent    = p.predictions||0;
+    buildPmPicker(p.avatar);
+    openSheet('playerModal');
+  }
+  function closePlayerModal() {
+    document.getElementById('pmAvPicker').classList.remove('open');
+    closeSheet('playerModal');
+    activeId = null;
+  }
+  function togglePmPicker() { document.getElementById('pmAvPicker').classList.toggle('open'); }
+  function buildPmPicker(cur) {
+    document.getElementById('pmAvPicker').innerHTML = AVATARS.map((a,i) =>
+      `<button class="av-opt${a===cur?' sel':''}" data-i="${i}" onclick="pickPmAv(this.dataset.i)">${a}</button>`
+    ).join('');
+  }
+  function pickPmAv(i) {
+    if (!activeId) return;
+    const p = players.find(x=>x.id===activeId);
+    if (!p) return;
+    p.avatar = AVATARS[i];
+    document.getElementById('pmAvEmoji').textContent = p.avatar;
+    buildPmPicker(p.avatar);
+    document.getElementById('pmAvPicker').classList.remove('open');
+    save(); render();
+  }
+  function pmUndo() {
+    if (!activeId) return;
+    const p = players.find(x=>x.id===activeId);
+    if (!p||p.points===0) { toast('Already at 0!'); return; }
+    p.points = Math.max(0, p.points-1);
+    document.getElementById('pmPts').textContent = p.points;
+    save(); render(); toast(`−1 pt from ${p.name}`);
+  }
+  function pmDelete() {
+    if (!activeId) return;
+    const p = players.find(x=>x.id===activeId);
+    if (!p||!confirm(`Remove ${p.name}?`)) return;
+    players = players.filter(x=>x.id!==activeId);
+    save(); closePlayerModal(); render(); toast(`${p.name} removed`);
+  }
 
-    document.getElementById('modalAvatarEmoji').textContent = p.avatar;
-    document.getElementById('modalName').textContent = p.name;
-    document.getElementById('modalPts').textContent = p.points;
-    document.getElementById('modalRaces').textContent = p.races;
-    document.getElementById('bd1').textContent = p.places[1];
-    document.getElementById('bd2').textContent = p.places[2];
-    document.getElementById('bd3').textContent = p.places[3];
-    document.getElementById('bd4').textContent = p.places[4];
-
-    buildModalAvatarPicker(p.avatar);
-
+  // ── Sheet helpers ─────────────────────────────────────
+  function openSheet(id) {
     document.getElementById('overlay').classList.add('open');
-    document.getElementById('playerModal').classList.add('open');
+    document.getElementById(id).classList.add('open');
     document.body.style.overflow = 'hidden';
   }
-
-  function closeModal() {
+  function closeSheet(id) {
     document.getElementById('overlay').classList.remove('open');
-    document.getElementById('playerModal').classList.remove('open');
-    document.getElementById('modalAvatarPicker').classList.remove('open');
+    document.getElementById(id).classList.remove('open');
     document.body.style.overflow = '';
-    activePlayerId = null;
   }
-
-  function toggleAvatarPicker() {
-    document.getElementById('modalAvatarPicker').classList.toggle('open');
-  }
-
-  function buildModalAvatarPicker(current) {
-    const picker = document.getElementById('modalAvatarPicker');
-    picker.innerHTML = AVATARS.map(a => `
-      <button class="avatar-opt${a === current ? ' selected' : ''}"
-              onclick="pickModalAvatar('${a}')">${a}</button>
-    `).join('');
-  }
-
-  function pickModalAvatar(emoji) {
-    if (!activePlayerId) return;
-    const p = players.find(x => x.id === activePlayerId);
-    if (!p) return;
-    p.avatar = emoji;
-    document.getElementById('modalAvatarEmoji').textContent = emoji;
-    buildModalAvatarPicker(emoji);
-    document.getElementById('modalAvatarPicker').classList.remove('open');
-    save();
-    render();
-  }
-
-  function modalAddPoints(place) {
-    if (!activePlayerId) return;
-    const p = players.find(x => x.id === activePlayerId);
-    if (!p) return;
-    const pts = PLACE_POINTS[place];
-    p.points += pts;
-    p.races += 1;
-    p.places[place] = (p.places[place] || 0) + 1;
-    save();
-    // update modal live
-    document.getElementById('modalPts').textContent = p.points;
-    document.getElementById('modalRaces').textContent = p.races;
-    document.getElementById(`bd${place}`).textContent = p.places[place];
-    render();
-    toast(`+${pts} pts to ${p.name}`);
-  }
-
-  function modalRemovePoints() {
-    if (!activePlayerId) return;
-    const p = players.find(x => x.id === activePlayerId);
-    if (!p || p.points === 0) { toast('Already at 0!'); return; }
-    p.points = Math.max(0, p.points - 1);
-    save();
-    document.getElementById('modalPts').textContent = p.points;
-    render();
-    toast(`−1 pt from ${p.name}`);
-  }
-
-  function modalDeletePlayer() {
-    if (!activePlayerId) return;
-    const p = players.find(x => x.id === activePlayerId);
-    if (!p) return;
-    if (!confirm(`Remove ${p.name} from the leaderboard?`)) return;
-    players = players.filter(x => x.id !== activePlayerId);
-    save();
-    closeModal();
-    render();
-    toast(`${p.name} removed`);
+  function overlayClick() {
+    // only close player modal on overlay tap; race modal needs explicit cancel
+    if (document.getElementById('playerModal').classList.contains('open')) closePlayerModal();
   }
 
   // ── Render ────────────────────────────────────────────
-  function rankEmoji(rank) {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return `<span style="font-size:0.9rem;font-weight:700;color:var(--muted)">${rank}</span>`;
-  }
-
-  function placesHtml(places) {
-    const chips = [];
-    if (places[1]) chips.push(`<span class="place-chip c1">🥇×${places[1]}</span>`);
-    if (places[2]) chips.push(`<span class="place-chip c2">🥈×${places[2]}</span>`);
-    if (places[3]) chips.push(`<span class="place-chip c3">🥉×${places[3]}</span>`);
-    if (places[4]) chips.push(`<span class="place-chip">4th×${places[4]}</span>`);
-    return chips.join('');
-  }
-
   function render() {
-    const board = document.getElementById('leaderboard');
-    const empty = document.getElementById('emptyState');
-    const sorted = [...players].sort((a, b) => b.points - a.points);
+    document.getElementById('headerSub').textContent =
+      `${players.length} player${players.length!==1?'s':''} · ${raceCount} race${raceCount!==1?'s':''}`;
 
-    if (sorted.length === 0) {
-      board.innerHTML = '';
-      empty.style.display = 'block';
-      return;
-    }
+    const sorted = [...players].sort((a,b)=>b.points-a.points);
+    const board  = document.getElementById('board');
+    const empty  = document.getElementById('emptyState');
 
+    if (!sorted.length) { board.innerHTML=''; empty.style.display='block'; return; }
     empty.style.display = 'none';
 
-    board.innerHTML = sorted.map((p, idx) => {
-      const rank = idx + 1;
-      const chips = placesHtml(p.places || {});
-      return `
-        <div class="player-card${rank <= 3 ? ` rank-${rank}` : ''}" onclick="openModal(${p.id})">
-          <div class="card-rank">${rankEmoji(rank)}</div>
-          <div class="card-avatar">${p.avatar || '🔴'}</div>
-          <div class="card-info">
-            <div class="card-name">${escHtml(p.name)}</div>
-            <div class="card-places">${chips || '<span class="place-chip">No races yet</span>'}</div>
+    board.innerHTML = sorted.map((p,i) => {
+      const r = i+1;
+      const ri = r===1?'🥇':r===2?'🥈':r===3?'🥉':r;
+      return `<div class="pcard${r<=3?` r${r}`:''}" onclick="openPlayerModal(${p.id})">
+        <div class="c-rank${r<=3?' top':''}">${ri}</div>
+        <div class="c-av">${p.avatar}</div>
+        <div class="c-info">
+          <div class="c-name">${esc(p.name)}</div>
+          <div class="c-medals">
+            <span class="mstat${p.places[1]?'':' dim'}">🥇 ${p.places[1]}</span>
+            <span class="mstat${p.places[2]?'':' dim'}">🥈 ${p.places[2]}</span>
+            <span class="mstat${p.places[3]?'':' dim'}">🥉 ${p.places[3]}</span>
           </div>
-          <div class="card-points">${p.points}</div>
-          <div class="card-chevron">›</div>
-        </div>`;
+        </div>
+        <div class="c-pts">
+          <div class="c-pts-num">${p.points}</div>
+          <div class="c-pts-lbl">pts</div>
+        </div>
+        <div class="c-chev">›</div>
+      </div>`;
     }).join('');
   }
 
-  function escHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   // ── Toast ─────────────────────────────────────────────
-  let toastTimer;
+  let tt;
   function toast(msg) {
     const el = document.getElementById('toast');
     el.textContent = msg;
     el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    clearTimeout(tt);
+    tt = setTimeout(()=>el.classList.remove('show'), 2400);
   }
 
   // ── Init ──────────────────────────────────────────────
-  document.getElementById('playerNameInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') addPlayer();
-  });
-
-  load();
-  buildAddAvatarRow();
-  render();
+  document.getElementById('nameInput').addEventListener('keydown', e => { if(e.key==='Enter') goAvatarStep(); });
+  load(); render();
 </script>
 </body>
 </html>
