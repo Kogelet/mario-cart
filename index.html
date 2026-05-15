@@ -69,9 +69,8 @@
     .pcard:active{filter:brightness(1.18);}
 
     /* Row backgrounds — dark blue */
-    .pcard.r1{background:linear-gradient(90deg,#ffe600,#ffd000);}
-    .pcard:not(.r1):nth-child(even){background:#111a30;}
-    .pcard:not(.r1):nth-child(odd) {background:#0d1526;}
+    .pcard:nth-child(even){background:#111a30;}
+    .pcard:nth-child(odd) {background:#0d1526;}
 
     /* Trend column */
     .c-trend{
@@ -92,8 +91,7 @@
       padding:14px 4px;
       font-variant-numeric:tabular-nums;
     }
-    .pcard.r1 .c-rank{color:#3a1a00;}
-    .pcard:not(.r1) .c-rank{color:#fff;}
+    .c-rank{color:#fff;}
 
     /* Avatar */
     .c-av{
@@ -101,16 +99,14 @@
       display:flex;align-items:center;justify-content:center;
       border-radius:50%;flex-shrink:0;margin:8px 10px 8px 2px;
     }
-    .pcard.r1    .c-av{background:rgba(0,0,0,.12);}
-    .pcard:not(.r1) .c-av{background:rgba(255,255,255,.07);}
+    .c-av{background:rgba(255,255,255,.07);}
 
     /* Name */
     .c-name{
       flex:1;font-size:1.1rem;font-weight:900;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
     }
-    .pcard.r1    .c-name{color:#1a0800;}
-    .pcard:not(.r1) .c-name{color:#fff;}
+    .c-name{color:#fff;}
 
     /* Stat columns (1st / 2nd / 3rd wins) */
     .c-stat{
@@ -121,7 +117,7 @@
     .c-stat .st-icon{font-size:.75rem;line-height:1;}
     .c-stat .st-num {font-size:1rem;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;}
     .pcard.r1    .c-stat .st-num{color:#3a1a00;}
-    .pcard:not(.r1) .c-stat .st-num{color:#fff;}
+    .c-stat .st-num{color:#fff;}
     .c-stat.dim .st-num{opacity:.25;}
 
     /* Score */
@@ -131,8 +127,7 @@
       min-width:54px;text-align:right;
       font-variant-numeric:tabular-nums;letter-spacing:-.5px;
     }
-    .pcard.r1    .c-score{color:#1a0800;}
-    .pcard:not(.r1) .c-score{color:#fff;}
+    .c-score{color:#fff;}
 
     .empty{text-align:center;padding:48px 0;color:var(--muted);}
     .empty .icon{font-size:3rem;margin-bottom:10px;}
