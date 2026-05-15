@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mario Kart Leaderboard</title>
+  <style>
+    :root {
+      --red: #e52521;
+      --yellow: #fbd000;
+      --blue: #049cd8;
+      --green: #43b047;
+      --dark: #1a1a2e;
+      --card: #16213e;
+      --border: #0f3460;
+      --text: #eaeaea;
+      --muted: #8899aa;
+      --gold: #ffd700;
+      --silver: #c0c0c0;
+      --bronze: #cd7f32;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--red), var(--yellow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 2px 6px rgba(251,208,0,0.3));
+    }
+
+    header p {
+      color: var(--muted);
+      margin-top: 4px;
+      font-size: 0.9rem;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    /* Add player */
+    .add-player {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .add-player input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .add-player input:focus { border-color: var(--yellow); }
+
+    .add-player input::placeholder { color: var(--muted); }
+
+    .btn {
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn:active { transform: scale(0.96); }
+
+    .btn-primary {
+      background: var(--yellow);
+      color: #111;
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: #ff6b6b;
+      border: 2px solid #ff6b6b;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    /* Points quick-add strip */
+    .points-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 800;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.1s, filter 0.1s;
+    }
+
+    .points-btn:active { transform: scale(0.9); }
+
+    .p1 { background: var(--gold); color: #111; }
+    .p2 { background: var(--silver); color: #111; }
+    .p3 { background: var(--bronze); color: #fff; }
+    .p4 { background: #667; color: #fff; }
+
+    .points-btn.minus {
+      background: transparent;
+      border: 2px solid #555;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    /* Leaderboard */
+    .leaderboard {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .player-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      transition: border-color 0.2s;
+      animation: slideIn 0.25s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .player-card.rank-1 { border-color: var(--gold); }
+    .player-card.rank-2 { border-color: var(--silver); }
+    .player-card.rank-3 { border-color: var(--bronze); }
+
+    .rank {
+      font-size: 1.4rem;
+      width: 36px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .player-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-score {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .total-points {
+      font-size: 1.6rem;
+      font-weight: 900;
+      width: 52px;
+      text-align: center;
+      flex-shrink: 0;
+      color: var(--yellow);
+    }
+
+    .point-controls {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .remove-btn {
+      margin-left: 6px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      margin-left: 2px;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--green);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .point-controls { gap: 3px; }
+      .points-btn { width: 32px; height: 32px; font-size: 0.8rem; }
+      .total-points { font-size: 1.3rem; width: 42px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🏎️ Mario Kart Leaderboard</h1>
+  <p>Track race points across sessions</p>
+</header>
+
+<div class="container">
+  <p class="section-label">Add player</p>
+  <div class="add-player">
+    <input type="text" id="playerNameInput" placeholder="Enter player name…" maxlength="30" />
+    <button class="btn btn-primary" onclick="addPlayer()">+ Add</button>
+  </div>
+
+  <p class="section-label">Rankings</p>
+  <div class="leaderboard" id="leaderboard"></div>
+  <div class="empty-state" id="emptyState">
+    <div class="icon">🎮</div>
+    <div>No players yet — add someone above!</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // Points map: finishing position → points
+  const PLACE_POINTS = { 1: 1, 2: 2, 3: 3, 4: 4 };
+
+  // State
+  let players = [];
+
+  function save() {
+    localStorage.setItem('mk_players', JSON.stringify(players));
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem('mk_players');
+      if (raw) players = JSON.parse(raw);
+    } catch (_) { players = []; }
+  }
+
+  function addPlayer() {
+    const input = document.getElementById('playerNameInput');
+    const name = input.value.trim();
+    if (!name) return;
+    if (players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+      toast('Player already exists!');
+      return;
+    }
+    players.push({ id: Date.now(), name, points: 0, races: 0 });
+    input.value = '';
+    save();
+    render();
+    toast(`${name} added!`);
+  }
+
+  function addPoints(id, place) {
+    const pts = PLACE_POINTS[place] ?? 0;
+    const player = players.find(p => p.id === id);
+    if (!player) return;
+    player.points += pts;
+    player.races += 1;
+    save();
+    render();
+    toast(`+${pts} pts to ${player.name} (P${place})`);
+  }
+
+  function removePoints(id) {
+    const player = players.find(p => p.id === id);
+    if (!player || player.points === 0) return;
+    player.points = Math.max(0, player.points - 1);
+    save();
+    render();
+  }
+
+  function removePlayer(id) {
+    const player = players.find(p => p.id === id);
+    if (!player) return;
+    if (!confirm(`Remove ${player.name} from the leaderboard?`)) return;
+    players = players.filter(p => p.id !== id);
+    save();
+    render();
+  }
+
+  function rankEmoji(rank) {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return `${rank}`;
+  }
+
+  function render() {
+    const board = document.getElementById('leaderboard');
+    const empty = document.getElementById('emptyState');
+
+    const sorted = [...players].sort((a, b) => b.points - a.points);
+
+    if (sorted.length === 0) {
+      board.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    board.innerHTML = sorted.map((player, idx) => {
+      const rank = idx + 1;
+      const avg = player.races > 0 ? (player.points / player.races).toFixed(1) : '—';
+      return `
+        <div class="player-card rank-${rank <= 3 ? rank : ''}">
+          <div class="rank">${rankEmoji(rank)}</div>
+          <div class="player-info">
+            <div class="player-name">${escHtml(player.name)}</div>
+            <div class="player-score">${player.races} race${player.races !== 1 ? 's' : ''} · avg ${avg} pts</div>
+          </div>
+          <div class="total-points">${player.points}</div>
+          <div class="point-controls">
+            <button class="points-btn p1" title="+1 (1st place)" onclick="addPoints(${player.id}, 1)">P1</button>
+            <button class="points-btn p2" title="+2 (2nd place)" onclick="addPoints(${player.id}, 2)">P2</button>
+            <button class="points-btn p3" title="+3 (3rd place)" onclick="addPoints(${player.id}, 3)">P3</button>
+            <button class="points-btn p4" title="+4 (4th place)" onclick="addPoints(${player.id}, 4)">P4</button>
+            <button class="points-btn minus" title="Remove 1 point" onclick="removePoints(${player.id})">−</button>
+          </div>
+          <button class="btn btn-danger remove-btn" title="Remove player" onclick="removePlayer(${player.id})">✕</button>
+        </div>`;
+    }).join('');
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  // Enter key on input
+  document.getElementById('playerNameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addPlayer();
+  });
+
+  load();
+  render();
+</script>
+</body>
+</html>
