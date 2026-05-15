@@ -304,6 +304,7 @@
     <div class="stat-cell b"><div class="si">🥉</div><div class="sn" id="pm3">0</div><div class="sl">3rd</div></div>
     <div class="stat-cell p"><div class="si">🪄</div><div class="sn" id="pmPred">0</div><div class="sl">Preds</div></div>
   </div>
+  <button class="btn-undo" onclick="pmAdd()">+ Add 1 point</button>
   <button class="btn-undo" onclick="pmUndo()">− Remove 1 point</button>
   <button class="btn-del"  onclick="pmDelete()">🗑 Remove player</button>
 </div>
@@ -547,6 +548,12 @@
     document.getElementById('pmAvEmoji').textContent=p.avatar;
     buildPmPicker(p.avatar); document.getElementById('pmAvPicker').classList.remove('open');
     save(); render();
+  }
+  function pmAdd() {
+    if(!activeId)return; const p=players.find(x=>x.id===activeId); if(!p)return;
+    p.points+=1;
+    document.getElementById('pmPts').textContent=p.points;
+    save(); render(); toast(`+1 pt to ${p.name}`);
   }
   function pmUndo() {
     if(!activeId)return; const p=players.find(x=>x.id===activeId);
