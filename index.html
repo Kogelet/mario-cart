@@ -270,33 +270,25 @@
 <!-- Race Modal -->
 <div class="sheet" id="raceModal">
   <div class="s-handle"></div>
+  <!-- Step 1: Assign positions (2–4 players) -->
   <div class="rstep active" id="rs1">
-    <div class="rs-title">🏁 New Race</div>
-    <div class="rs-sub">Select exactly 4 players who are racing</div>
-    <div class="sel-counter"><strong id="selCount">0</strong> / 4 selected</div>
-    <div class="sel-list" id="selList"></div>
-    <div class="rnav">
-      <button class="btn-back" onclick="closeRaceModal()">✕ Cancel</button>
-      <button class="btn-fwd" id="s1next" onclick="goStep2()" disabled>Assign Positions →</button>
-    </div>
-  </div>
-  <div class="rstep" id="rs2">
-    <div class="rs-title">🏎️ Positions</div>
-    <div class="rs-sub">Tap a player to assign their finish</div>
+    <div class="rs-title">🏎️ Race Results</div>
+    <div class="rs-sub">Tap players to assign 1st → 2nd → 3rd → 4th (min. 2)</div>
     <div class="pos-slots" id="posSlots"></div>
     <p class="slabel" style="margin-bottom:8px" id="remainLabel">Tap to assign</p>
     <div class="assign-grid" id="assignGrid"></div>
     <div class="rnav">
-      <button class="btn-back" onclick="goStep1()">← Back</button>
-      <button class="btn-fwd" id="s2next" onclick="goStep3()" disabled>Predictions →</button>
+      <button class="btn-back" onclick="closeRaceModal()">✕ Cancel</button>
+      <button class="btn-fwd" id="s1next" onclick="goStep2()" disabled>Predictions →</button>
     </div>
   </div>
-  <div class="rstep" id="rs3">
+  <!-- Step 2: Predictions -->
+  <div class="rstep" id="rs2">
     <div class="rs-title">⭐ Predictions</div>
-    <div class="rs-sub">Who predicted correctly? (+2 pts, once per race)</div>
+    <div class="rs-sub">Who predicted correctly? (+2 pts each)</div>
     <div class="pred-list" id="predList"></div>
     <div class="rnav">
-      <button class="btn-back" onclick="goStep2back()">← Back</button>
+      <button class="btn-back" onclick="goStep1()">← Back</button>
       <button class="btn-submit" onclick="submitRace()">🏁 Submit Race</button>
     </div>
   </div>
@@ -344,7 +336,6 @@
   let prevRanks = {};   // id → rank before last race (for trend arrows)
 
   // wizard state
-  let racerIds    = [];
   let positions   = {};
   let predictions = new Set();
   let pendingName = '';
@@ -456,64 +447,64 @@
   // ── Race modal ───────────────────────────────────────
   function openRaceModal() {
     if (players.length<2) { toast('Add at least 2 players first!'); return; }
-    racerIds=[]; positions={}; predictions=new Set();
+    positions={}; predictions=new Set();
     showStep(1); buildStep1(); openSheet('raceModal');
   }
   function closeRaceModal() { closeSheet('raceModal'); }
 
   function showStep(n) {
-    ['rs1','rs2','rs3'].forEach((id,i)=>document.getElementById(id).classList.toggle('active',i+1===n));
+    ['rs1','rs2'].forEach((id,i)=>document.getElementById(id).classList.toggle('active',i+1===n));
   }
 
-  function buildStep1() {
-    document.getElementById('selCount').textContent=racerIds.length;
-    document.getElementById('selList').innerHTML=players.map(p=>{
-      const on=racerIds.includes(p.id), off=!on&&racerIds.length>=4;
-      return `<div class="sel-item${on?' on':''}${off?' off':''}" onclick="toggleRacer(${p.id})">
-        <span style="font-size:1.5rem">${p.avatar}</span>
-        <span class="sel-name">${esc(p.name)}</span>
-        <span class="sel-chk">${on?'✅':''}</span>
-      </div>`;
-    }).join('');
-    document.getElementById('s1next').disabled=racerIds.length!==4;
-  }
-  function toggleRacer(id) {
-    racerIds=racerIds.includes(id)?racerIds.filter(r=>r!==id):racerIds.length<4?[...racerIds,id]:racerIds;
-    buildStep1();
-  }
+  // Step 1: assign positions
   function goStep1() { showStep(1); buildStep1(); }
 
-  function goStep2() { positions={}; showStep(2); buildStep2(); }
-  function goStep2back() { showStep(2); buildStep2(); }
-  function buildStep2() {
-    const assigned=Object.values(positions), remaining=racerIds.filter(id=>!assigned.includes(id));
-    const icons={1:'🥇',2:'🥈',3:'🥉',4:'4️⃣'};
-    const nextPos=[1,2,3,4].find(p=>!positions[p]);
+  function buildStep1() {
+    const assigned = Object.values(positions);
+    const remaining = players.filter(p=>!assigned.includes(p.id));
+    const icons = {1:'🥇',2:'🥈',3:'🥉',4:'4️⃣'};
+    const labels = {1:'1st',2:'2nd',3:'3rd',4:'4th'};
+    const nextPos = [1,2,3,4].find(pos=>!positions[pos]);
+    const filled  = Object.keys(positions).length;
+
     document.getElementById('posSlots').innerHTML=[1,2,3,4].map(pos=>{
       const pid=positions[pos], p=pid?players.find(x=>x.id===pid):null;
       return `<div class="pos-slot">
         <span class="pos-icon">${icons[pos]}</span>
         <span class="pos-bonus">+${PLACE_POINTS[pos]}pts</span>
-        <span class="pos-name${p?'':' empty'}">${p?p.avatar+' '+esc(p.name):'Not assigned'}</span>
+        <span class="pos-name${p?'':' empty'}">${p?p.avatar+' '+esc(p.name):'—'}</span>
         ${p?`<button class="pos-clear" onclick="clearPos(${pos})">✕</button>`:''}
       </div>`;
     }).join('');
-    document.getElementById('remainLabel').textContent=nextPos
-      ? `Tap to assign ${icons[nextPos]} ${['','1st','2nd','3rd','4th'][nextPos]}`
-      : 'All positions assigned!';
-    document.getElementById('assignGrid').innerHTML=remaining.map(id=>{
-      const p=players.find(x=>x.id===id);
-      return `<button class="assign-btn" onclick="assignPos(${p.id})">
-        <span style="font-size:1.3rem">${p.avatar}</span><span>${esc(p.name)}</span>
-      </button>`;
-    }).join('');
-    document.getElementById('s2next').disabled=Object.keys(positions).length!==4;
-  }
-  function assignPos(pid) { const next=[1,2,3,4].find(p=>!positions[p]); if(next){positions[next]=pid;buildStep2();} }
-  function clearPos(pos) { delete positions[pos]; buildStep2(); }
 
-  function goStep3() { predictions=new Set(); showStep(3); buildStep3(); }
-  function buildStep3() {
+    document.getElementById('remainLabel').textContent = nextPos
+      ? `Tap to set ${icons[nextPos]} ${labels[nextPos]} place`
+      : 'All 4 assigned — or go to Predictions';
+
+    document.getElementById('assignGrid').innerHTML = remaining.map(p=>
+      `<button class="assign-btn" onclick="assignPos(${p.id})">
+        <span style="font-size:1.3rem">${p.avatar}</span><span>${esc(p.name)}</span>
+      </button>`
+    ).join('');
+
+    // Need at least 1st and 2nd filled
+    document.getElementById('s1next').disabled = filled < 2;
+  }
+
+  function assignPos(pid) {
+    const next=[1,2,3,4].find(p=>!positions[p]);
+    if (next) { positions[next]=pid; buildStep1(); }
+  }
+  function clearPos(pos) {
+    // Clear this slot and all slots after it (keep positions sequential)
+    for (let p=pos; p<=4; p++) delete positions[p];
+    buildStep1();
+  }
+
+  // Step 2: predictions (all players, including race winners)
+  function goStep2() { predictions=new Set(); showStep(2); buildStep2(); }
+
+  function buildStep2() {
     document.getElementById('predList').innerHTML=players.map(p=>`
       <div class="pred-item${predictions.has(p.id)?' on':''}" onclick="togglePred(${p.id})">
         <span style="font-size:1.5rem">${p.avatar}</span>
@@ -521,10 +512,10 @@
         ${predictions.has(p.id)?'<span class="pred-badge">⭐ +2 pts</span>':''}
       </div>`).join('');
   }
-  function togglePred(id) { predictions.has(id)?predictions.delete(id):predictions.add(id); buildStep3(); }
+  function togglePred(id) { predictions.has(id)?predictions.delete(id):predictions.add(id); buildStep2(); }
 
   function submitRace() {
-    snapshotRanks(); // capture standings BEFORE applying race results
+    snapshotRanks();
     [1,2,3,4].forEach(pos=>{
       const p=players.find(x=>x.id===positions[pos]); if(!p)return;
       p.points+=PLACE_POINTS[pos]; p.races+=1; p.places[pos]=(p.places[pos]||0)+1;
