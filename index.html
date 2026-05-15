@@ -310,7 +310,7 @@
     <div class="stat-cell g"><div class="si">🥇</div><div class="sn" id="pm1">0</div><div class="sl">1st</div></div>
     <div class="stat-cell s"><div class="si">🥈</div><div class="sn" id="pm2">0</div><div class="sl">2nd</div></div>
     <div class="stat-cell b"><div class="si">🥉</div><div class="sn" id="pm3">0</div><div class="sl">3rd</div></div>
-    <div class="stat-cell p"><div class="si">⭐</div><div class="sn" id="pmPred">0</div><div class="sl">Preds</div></div>
+    <div class="stat-cell p"><div class="si">🪄</div><div class="sn" id="pmPred">0</div><div class="sl">Preds</div></div>
   </div>
   <button class="btn-undo" onclick="pmUndo()">− Remove 1 point</button>
   <button class="btn-del"  onclick="pmDelete()">🗑 Remove player</button>
@@ -510,7 +510,7 @@
       <div class="pred-item${predictions.has(p.id)?' on':''}" onclick="togglePred(${p.id})">
         <span style="font-size:1.5rem">${p.avatar}</span>
         <span style="font-weight:900;flex:1">${esc(p.name)}</span>
-        ${predictions.has(p.id)?'<span class="pred-badge">⭐ +2 pts</span>':''}
+        ${predictions.has(p.id)?'<span class="pred-badge">🪄 +2 pts</span>':''}
       </div>`).join('');
   }
   function togglePred(id) { predictions.has(id)?predictions.delete(id):predictions.add(id); buildStep2(); }
@@ -598,7 +598,7 @@
         <div class="c-stat gold  ${p.places[1]?'':'dim'}"><span class="st-icon">🥇</span><span class="st-num">${p.places[1]}</span></div>
         <div class="c-stat silver${p.places[2]?'':'dim'}"><span class="st-icon">🥈</span><span class="st-num">${p.places[2]}</span></div>
         <div class="c-stat bronze${p.places[3]?'':'dim'}"><span class="st-icon">🥉</span><span class="st-num">${p.places[3]}</span></div>
-        <div class="c-stat pred  ${(p.predictions||0)?'':'dim'}"><span class="st-icon">⭐</span><span class="st-num">${p.predictions||0}</span></div>
+        <div class="c-stat pred  ${(p.predictions||0)?'':'dim'}"><span class="st-icon">🪄</span><span class="st-num">${p.predictions||0}</span></div>
         <div class="c-score">${p.points}</div>
       </div>`;
     }).join('');
