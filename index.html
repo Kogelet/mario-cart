@@ -216,6 +216,21 @@
     .btn-del{width:100%;padding:12px;border-radius:10px;border:2px solid rgba(231,76,60,.4);background:transparent;color:#e74c3c;font-size:.9rem;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;transition:background .2s;}
     .btn-del:hover{background:rgba(231,76,60,.1);}
 
+    /* ── ERASE BUTTON ── */
+    .btn-erase{width:100%;padding:12px;border-radius:10px;border:2px solid rgba(231,76,60,.35);background:transparent;color:#e74c3c;font-size:.85rem;font-weight:900;font-family:'Nunito',sans-serif;cursor:pointer;transition:background .2s,border-color .2s;margin-top:24px;}
+    .btn-erase:hover{background:rgba(231,76,60,.09);border-color:rgba(231,76,60,.6);}
+
+    /* ── RESET MODAL ── */
+    .warn-icon{font-size:3rem;text-align:center;margin-bottom:6px;}
+    .warn-title{font-family:'Press Start 2P',cursive;font-size:.7rem;color:#e74c3c;text-align:center;margin-bottom:12px;line-height:1.6;}
+    .warn-body{font-size:.88rem;color:var(--muted);font-weight:700;line-height:1.6;margin-bottom:18px;text-align:center;}
+    .warn-body strong{color:var(--text);}
+    .warn-confirm-row{display:flex;flex-direction:column;gap:10px;}
+    .btn-cancel{padding:13px;border-radius:10px;border:2px solid rgba(255,255,255,.1);background:transparent;color:var(--muted);font-size:.9rem;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;}
+    .btn-danger{padding:13px;border-radius:10px;border:none;border-bottom:3px solid #700;background:var(--red);color:#fff;font-size:.95rem;font-weight:900;font-family:'Nunito',sans-serif;cursor:pointer;transition:transform .1s;}
+    .btn-danger:active{transform:translateY(2px);border-bottom-width:1px;}
+    .btn-danger:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+
     /* ── TOAST ── */
     #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#fff;padding:10px 22px;border-radius:999px;font-weight:900;font-size:.88rem;transition:transform .3s ease;pointer-events:none;z-index:200;white-space:nowrap;font-family:'Nunito',sans-serif;}
     #toast.show{transform:translateX(-50%) translateY(0);}
@@ -257,6 +272,8 @@
       <button class="btn-add" onclick="confirmAdd()">✓ Add Player</button>
     </div>
   </div>
+
+  <button class="btn-erase" onclick="openResetModal()">🗑 Erase All Race Data</button>
 </div>
 
 <div id="overlay" onclick="overlayClick()"></div>
@@ -308,6 +325,37 @@
   <button class="btn-undo" onclick="pmAdd()">+ Add 1 point</button>
   <button class="btn-undo" onclick="pmUndo()">− Remove 1 point</button>
   <button class="btn-del"  onclick="pmDelete()">🗑 Remove player</button>
+</div>
+
+<!-- Reset Confirm Modal -->
+<div class="sheet" id="resetModal">
+  <div class="s-handle"></div>
+  <div id="resetStep1">
+    <div class="warn-icon">⚠️</div>
+    <div class="warn-title">ERASE ALL RACE DATA?</div>
+    <div class="warn-body">
+      This will reset <strong>all points, race wins, and predictions</strong> for every player.<br><br>
+      Player names and avatars are kept. This <strong>cannot be undone</strong>.
+    </div>
+    <div class="warn-confirm-row">
+      <button class="btn-danger" onclick="showResetStep2()">Yes, continue →</button>
+      <button class="btn-cancel" onclick="closeResetModal()">Cancel</button>
+    </div>
+  </div>
+  <div id="resetStep2" style="display:none">
+    <div class="warn-icon">☠️</div>
+    <div class="warn-title">ARE YOU SURE?</div>
+    <div class="warn-body">
+      Type <strong>RESET</strong> below to confirm you want to permanently erase all race history.
+    </div>
+    <input type="text" id="resetInput" placeholder='Type RESET here…' maxlength="10"
+      oninput="document.getElementById('btnDoReset').disabled=this.value!=='RESET'"
+      style="width:100%;box-sizing:border-box;padding:13px 15px;border-radius:10px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--text);font-size:1rem;font-family:'Nunito',sans-serif;font-weight:700;outline:none;margin-bottom:14px;letter-spacing:1px;">
+    <div class="warn-confirm-row">
+      <button class="btn-danger" id="btnDoReset" onclick="resetAll()" disabled>🗑 Erase Everything</button>
+      <button class="btn-cancel" onclick="closeResetModal()">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -570,10 +618,37 @@
     save(); closePlayerModal(); render(); toast(`${p.name} removed`);
   }
 
+  // ── Reset all data ───────────────────────────────────
+  function openResetModal() {
+    document.getElementById('resetStep1').style.display='';
+    document.getElementById('resetStep2').style.display='none';
+    document.getElementById('resetInput').value='';
+    document.getElementById('btnDoReset').disabled=true;
+    openSheet('resetModal');
+  }
+  function closeResetModal() { closeSheet('resetModal'); }
+  function showResetStep2() {
+    document.getElementById('resetStep1').style.display='none';
+    document.getElementById('resetStep2').style.display='';
+    document.getElementById('resetInput').focus();
+  }
+  async function resetAll() {
+    players = players.map(p => ({...p, points:0, races:0, places:{1:0,2:0,3:0,4:0}, predictions:0}));
+    raceCount = 0;
+    prevRanks = {};
+    closeResetModal();
+    await save();
+    render();
+    toast('All race data erased 🗑');
+  }
+
   // ── Sheets ───────────────────────────────────────────
   function openSheet(id)  { document.getElementById('overlay').classList.add('open'); document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
   function closeSheet(id) { document.getElementById('overlay').classList.remove('open'); document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
-  function overlayClick() { if(document.getElementById('playerModal').classList.contains('open')) closePlayerModal(); }
+  function overlayClick() {
+    if(document.getElementById('playerModal').classList.contains('open')) closePlayerModal();
+    if(document.getElementById('resetModal').classList.contains('open')) closeResetModal();
+  }
 
   // ── Render ───────────────────────────────────────────
   function render() {
