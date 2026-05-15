@@ -6,23 +6,6 @@
   <title>Mario Kart Leaderboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
 
-  <!--
-  ═══════════════════════════════════════════════════════
-  SHARED DATABASE SETUP (Firebase Realtime Database)
-  ═══════════════════════════════════════════════════════
-  1. Go to https://console.firebase.google.com
-  2. Create a new project (free Spark plan is enough)
-  3. Click "Web" (</>) to add a web app → copy the firebaseConfig
-  4. In left menu: Build → Realtime Database → Create database
-     → Start in TEST MODE (allows read/write without login)
-  5. Replace the values in FIREBASE_CONFIG below with yours
-  6. Commit & push → everyone shares the same live data!
-
-  Without this, the app still works but data is device-local only.
-  ═══════════════════════════════════════════════════════
-  -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
     :root {
@@ -317,21 +300,7 @@
 <div id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-// REPLACE these with your Firebase project values.
-// See setup instructions at the top of this file.
-// Leave as-is to use device-local storage only.
-// ═══════════════════════════════════════════════════════
-const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  databaseURL:       "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId:         "YOUR_PROJECT",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
-};
-// ═══════════════════════════════════════════════════════
+const DB_URL = 'https://mariocart-33350-default-rtdb.europe-west1.firebasedatabase.app';
 
 const PLACE_POINTS = {1:4,2:3,3:2,4:1};
 const PRED_BONUS   = 2;
@@ -346,7 +315,6 @@ const AVATARS = [
 
 let players   = [];
 let raceCount = 0;
-let db        = null;
 
 // wizard state
 let racerIds    = [];
@@ -356,55 +324,57 @@ let pendingName = '';
 let addAvatar   = AVATARS[0];
 let activeId    = null;
 
-// ── Firebase ──────────────────────────────────────────
-function fbEnabled() { return !FIREBASE_CONFIG.databaseURL.includes('YOUR_'); }
+// ── Firebase REST + SSE (no SDK needed) ──────────────
+let sse = null;
 
 function syncBadge(status) {
-  const el = document.getElementById('syncBadge');
+  const el  = document.getElementById('syncBadge');
   const map = {
-    local:   {cls:'local',   txt:'💾 Local'},
     syncing: {cls:'syncing', txt:'🔄 Syncing…'},
     live:    {cls:'live',    txt:'🟢 Live'},
     error:   {cls:'error',   txt:'🔴 Offline'},
   };
-  const s = map[status]||map.local;
-  el.className = 'sync-badge ' + s.cls;
+  const s = map[status] || map.live;
+  el.className  = 'sync-badge ' + s.cls;
   el.textContent = s.txt;
 }
 
 function initFirebase() {
-  if (!fbEnabled()) { loadLocal(); render(); return; }
-  try {
-    firebase.initializeApp(FIREBASE_CONFIG);
-    db = firebase.database();
-    syncBadge('syncing');
-    db.ref('leaderboard').on('value', snap => {
-      const data = snap.val();
-      if (data) {
-        players   = normArr(data.players).map(defPlayer);
-        raceCount = data.raceCount || 0;
-      } else {
-        // Firebase empty — push local data if any
-        const local = readLocal();
-        if (local.players.length) {
-          db.ref('leaderboard').set(local);
-          players   = local.players;
-          raceCount = local.raceCount;
-        }
-      }
-      syncBadge('live');
-      render();
-    }, () => { syncBadge('error'); loadLocal(); render(); });
-  } catch(e) { console.warn('Firebase init error', e); loadLocal(); render(); }
+  syncBadge('syncing');
+
+  // Server-Sent Events — Firebase pushes every change in real time
+  sse = new EventSource(`${DB_URL}/leaderboard.json`);
+
+  sse.addEventListener('put', e => {
+    const payload = JSON.parse(e.data);
+    if (payload.data) {
+      players   = normArr(payload.data.players).map(defPlayer);
+      raceCount = payload.data.raceCount || 0;
+    } else {
+      // DB empty — seed with any existing local data
+      const local = readLocal();
+      if (local.players.length) pushDb(local.players, local.raceCount);
+    }
+    syncBadge('live');
+    render();
+  });
+
+  sse.onerror = () => syncBadge('error');
+}
+
+async function pushDb(p, rc) {
+  return fetch(`${DB_URL}/leaderboard.json`, {
+    method:  'PUT',
+    headers: {'Content-Type':'application/json'},
+    body:    JSON.stringify({players: p, raceCount: rc}),
+  });
 }
 
 async function save() {
   localStorage.setItem('mk_v4', JSON.stringify({players, raceCount}));
-  if (db) {
-    syncBadge('syncing');
-    try { await db.ref('leaderboard').set({players, raceCount}); syncBadge('live'); }
-    catch(e) { syncBadge('error'); }
-  }
+  syncBadge('syncing');
+  try { await pushDb(players, raceCount); syncBadge('live'); }
+  catch(e) { syncBadge('error'); }
 }
 
 function readLocal() {
