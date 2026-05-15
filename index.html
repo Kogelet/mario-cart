@@ -6,18 +6,17 @@
   <title>Mario Kart Leaderboard</title>
   <style>
     :root {
-      --red: #e52521;
-      --yellow: #fbd000;
-      --blue: #049cd8;
-      --green: #43b047;
       --dark: #1a1a2e;
       --card: #16213e;
       --border: #0f3460;
       --text: #eaeaea;
       --muted: #8899aa;
+      --yellow: #fbd000;
+      --red: #e52521;
       --gold: #ffd700;
       --silver: #c0c0c0;
       --bronze: #cd7f32;
+      --green: #43b047;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,45 +26,73 @@
       color: var(--text);
       font-family: 'Segoe UI', system-ui, sans-serif;
       min-height: 100vh;
-      padding: 24px 16px 48px;
+      padding: 24px 16px 60px;
     }
 
     header {
       text-align: center;
-      margin-bottom: 36px;
+      margin-bottom: 32px;
     }
 
     header h1 {
-      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
       font-weight: 900;
-      letter-spacing: -1px;
       text-transform: uppercase;
       background: linear-gradient(135deg, var(--red), var(--yellow));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 2px 6px rgba(251,208,0,0.3));
+      filter: drop-shadow(0 2px 6px rgba(251,208,0,0.25));
+      letter-spacing: -0.5px;
     }
 
-    header p {
+    header p { color: var(--muted); margin-top: 4px; font-size: 0.88rem; }
+
+    .container { max-width: 680px; margin: 0 auto; }
+
+    .section-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
       color: var(--muted);
-      margin-top: 4px;
-      font-size: 0.9rem;
+      margin-bottom: 10px;
+      margin-left: 2px;
     }
 
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
+    /* ── Add player ── */
+    .add-section { margin-bottom: 32px; }
+
+    .avatar-select-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
     }
 
-    /* Add player */
-    .add-player {
+    .avatar-opt {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background: var(--card);
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .avatar-opt:active { transform: scale(0.9); }
+    .avatar-opt.selected { border-color: var(--yellow); background: rgba(251,208,0,0.12); }
+
+    .add-row {
       display: flex;
       gap: 10px;
-      margin-bottom: 32px;
     }
 
-    .add-player input {
+    .add-row input {
       flex: 1;
       padding: 12px 16px;
       border-radius: 10px;
@@ -75,154 +102,324 @@
       font-size: 1rem;
       outline: none;
       transition: border-color 0.2s;
+      min-width: 0;
     }
 
-    .add-player input:focus { border-color: var(--yellow); }
+    .add-row input:focus { border-color: var(--yellow); }
+    .add-row input::placeholder { color: var(--muted); }
 
-    .add-player input::placeholder { color: var(--muted); }
-
-    .btn {
+    .btn-primary {
       padding: 12px 20px;
       border-radius: 10px;
       border: none;
       font-size: 0.95rem;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.1s, opacity 0.2s;
-      white-space: nowrap;
-    }
-
-    .btn:active { transform: scale(0.96); }
-
-    .btn-primary {
       background: var(--yellow);
       color: #111;
+      white-space: nowrap;
+      transition: transform 0.1s;
+      flex-shrink: 0;
     }
 
-    .btn-danger {
-      background: transparent;
-      color: #ff6b6b;
-      border: 2px solid #ff6b6b;
-      padding: 6px 12px;
-      font-size: 0.8rem;
-    }
+    .btn-primary:active { transform: scale(0.96); }
 
-    /* Points quick-add strip */
-    .points-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      border: none;
-      font-weight: 800;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: transform 0.1s, filter 0.1s;
-    }
-
-    .points-btn:active { transform: scale(0.9); }
-
-    .p1 { background: var(--gold); color: #111; }
-    .p2 { background: var(--silver); color: #111; }
-    .p3 { background: var(--bronze); color: #fff; }
-    .p4 { background: #667; color: #fff; }
-
-    .points-btn.minus {
-      background: transparent;
-      border: 2px solid #555;
-      color: var(--muted);
-      font-size: 1rem;
-    }
-
-    /* Leaderboard */
-    .leaderboard {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    /* ── Leaderboard cards ── */
+    .leaderboard { display: flex; flex-direction: column; gap: 10px; }
 
     .player-card {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       background: var(--card);
       border: 2px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 16px;
-      transition: border-color 0.2s;
+      border-radius: 16px;
+      padding: 14px 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.1s;
       animation: slideIn 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
+    .player-card:active { transform: scale(0.98); }
     .player-card.rank-1 { border-color: var(--gold); }
     .player-card.rank-2 { border-color: var(--silver); }
     .player-card.rank-3 { border-color: var(--bronze); }
 
-    .rank {
-      font-size: 1.4rem;
-      width: 36px;
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-rank {
+      font-size: 1.3rem;
+      width: 32px;
       text-align: center;
       flex-shrink: 0;
     }
 
-    .player-info {
+    .card-avatar {
+      font-size: 2rem;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    .card-info {
       flex: 1;
       min-width: 0;
     }
 
-    .player-name {
-      font-size: 1.05rem;
+    .card-name {
+      font-size: 1rem;
       font-weight: 700;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .player-score {
-      font-size: 0.82rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .total-points {
-      font-size: 1.6rem;
-      font-weight: 900;
-      width: 52px;
-      text-align: center;
-      flex-shrink: 0;
-      color: var(--yellow);
-    }
-
-    .point-controls {
+    .card-places {
       display: flex;
-      gap: 5px;
-      flex-shrink: 0;
+      gap: 6px;
+      margin-top: 5px;
+      flex-wrap: wrap;
     }
 
-    .remove-btn {
-      margin-left: 6px;
+    .place-chip {
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .place-chip.c1 { background: rgba(255,215,0,0.18); color: var(--gold); }
+    .place-chip.c2 { background: rgba(192,192,192,0.18); color: var(--silver); }
+    .place-chip.c3 { background: rgba(205,127,50,0.22); color: var(--bronze); }
+
+    .card-points {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--yellow);
+      flex-shrink: 0;
+      width: 52px;
+      text-align: right;
+    }
+
+    .card-chevron {
+      color: var(--muted);
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-left: 2px;
     }
 
     .empty-state {
       text-align: center;
       padding: 48px 0;
       color: var(--muted);
-      font-size: 1rem;
     }
 
     .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
 
-    .section-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-      margin-bottom: 10px;
-      margin-left: 2px;
+    /* ── Overlay ── */
+    #overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      backdrop-filter: blur(2px);
     }
+
+    #overlay.open { display: block; }
+
+    /* ── Bottom sheet modal ── */
+    #playerModal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 680px;
+      margin: 0 auto;
+      background: #1e2a45;
+      border-radius: 24px 24px 0 0;
+      padding: 0 20px 40px;
+      z-index: 101;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+
+    #playerModal.open { transform: translateY(0); }
+
+    .modal-handle {
+      width: 40px;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      margin: 14px auto 20px;
+    }
+
+    .modal-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .modal-avatar-btn {
+      width: 64px;
+      height: 64px;
+      font-size: 2.4rem;
+      background: rgba(255,255,255,0.07);
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.2s;
+      position: relative;
+    }
+
+    .modal-avatar-btn:after {
+      content: '✏️';
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      font-size: 0.8rem;
+      background: var(--dark);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-avatar-btn:active { border-color: var(--yellow); }
+
+    .modal-identity { flex: 1; min-width: 0; }
+
+    .modal-name {
+      font-size: 1.3rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .modal-pts {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .modal-pts span { color: var(--yellow); font-weight: 700; }
+
+    /* Avatar picker inside modal */
+    .modal-avatar-picker {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+      padding: 14px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .modal-avatar-picker.open { display: flex; }
+
+    /* Breakdown row */
+    .breakdown-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .breakdown-cell {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+
+    .breakdown-cell .medal { font-size: 1.4rem; }
+    .breakdown-cell .count { font-size: 1.2rem; font-weight: 800; margin-top: 2px; }
+    .breakdown-cell .label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .breakdown-cell.c1 { background: rgba(255,215,0,0.12); }
+    .breakdown-cell.c2 { background: rgba(192,192,192,0.1); }
+    .breakdown-cell.c3 { background: rgba(205,127,50,0.12); }
+
+    /* Place buttons */
+    .place-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .place-btn {
+      padding: 14px 4px;
+      border-radius: 14px;
+      border: none;
+      font-weight: 800;
+      font-size: 0.9rem;
+      cursor: pointer;
+      line-height: 1.4;
+      transition: transform 0.1s, filter 0.1s;
+      text-align: center;
+    }
+
+    .place-btn:active { transform: scale(0.93); filter: brightness(1.15); }
+    .place-btn small { display: block; font-size: 0.72rem; font-weight: 500; opacity: 0.8; }
+
+    .pb1 { background: var(--gold); color: #111; }
+    .pb2 { background: var(--silver); color: #111; }
+    .pb3 { background: var(--bronze); color: #fff; }
+    .pb4 { background: #445; color: var(--text); border: 2px solid #667; }
+
+    .undo-btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 12px;
+      border: 2px solid #445;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 24px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .undo-btn:hover { border-color: #667; color: var(--text); }
+
+    .delete-btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 12px;
+      border: 2px solid #c0392b;
+      background: transparent;
+      color: #e74c3c;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .delete-btn:hover { background: rgba(231,76,60,0.12); }
 
     /* Toast */
     #toast {
@@ -230,7 +427,7 @@
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: var(--green);
+      background: #2ecc71;
       color: #fff;
       padding: 10px 22px;
       border-radius: 999px;
@@ -238,16 +435,15 @@
       font-size: 0.9rem;
       transition: transform 0.3s ease;
       pointer-events: none;
-      z-index: 999;
+      z-index: 200;
+      white-space: nowrap;
     }
 
     #toast.show { transform: translateX(-50%) translateY(0); }
 
-    /* Responsive */
-    @media (max-width: 480px) {
-      .point-controls { gap: 3px; }
-      .points-btn { width: 32px; height: 32px; font-size: 0.8rem; }
-      .total-points { font-size: 1.3rem; width: 42px; }
+    @media (max-width: 380px) {
+      .place-btn { font-size: 0.8rem; padding: 12px 2px; }
+      .card-points { font-size: 1.5rem; width: 44px; }
     }
   </style>
 </head>
@@ -255,44 +451,130 @@
 
 <header>
   <h1>🏎️ Mario Kart Leaderboard</h1>
-  <p>Track race points across sessions</p>
+  <p>Tap a player to add race results</p>
 </header>
 
 <div class="container">
-  <p class="section-label">Add player</p>
-  <div class="add-player">
-    <input type="text" id="playerNameInput" placeholder="Enter player name…" maxlength="30" />
-    <button class="btn btn-primary" onclick="addPlayer()">+ Add</button>
+
+  <div class="add-section">
+    <p class="section-label">Choose avatar</p>
+    <div class="avatar-select-row" id="addAvatarRow"></div>
+    <p class="section-label" style="margin-top:12px">Add player</p>
+    <div class="add-row">
+      <input type="text" id="playerNameInput" placeholder="Enter player name…" maxlength="30" />
+      <button class="btn-primary" onclick="addPlayer()">+ Add</button>
+    </div>
   </div>
 
   <p class="section-label">Rankings</p>
   <div class="leaderboard" id="leaderboard"></div>
-  <div class="empty-state" id="emptyState">
+  <div class="empty-state" id="emptyState" style="display:none">
     <div class="icon">🎮</div>
     <div>No players yet — add someone above!</div>
   </div>
+
+</div>
+
+<!-- Overlay -->
+<div id="overlay" onclick="closeModal()"></div>
+
+<!-- Bottom sheet -->
+<div id="playerModal">
+  <div class="modal-handle"></div>
+
+  <div class="modal-top">
+    <div class="modal-avatar-btn" id="modalAvatarBtn" onclick="toggleAvatarPicker()">
+      <span id="modalAvatarEmoji">🔴</span>
+    </div>
+    <div class="modal-identity">
+      <div class="modal-name" id="modalName">—</div>
+      <div class="modal-pts">Total: <span id="modalPts">0</span> pts · <span id="modalRaces">0</span> races</div>
+    </div>
+  </div>
+
+  <div class="modal-avatar-picker" id="modalAvatarPicker"></div>
+
+  <div class="breakdown-grid">
+    <div class="breakdown-cell c1">
+      <div class="medal">🥇</div>
+      <div class="count" id="bd1">0</div>
+      <div class="label">1st</div>
+    </div>
+    <div class="breakdown-cell c2">
+      <div class="medal">🥈</div>
+      <div class="count" id="bd2">0</div>
+      <div class="label">2nd</div>
+    </div>
+    <div class="breakdown-cell c3">
+      <div class="medal">🥉</div>
+      <div class="count" id="bd3">0</div>
+      <div class="label">3rd</div>
+    </div>
+    <div class="breakdown-cell">
+      <div class="medal">4️⃣</div>
+      <div class="count" id="bd4">0</div>
+      <div class="label">4th</div>
+    </div>
+  </div>
+
+  <p class="section-label">Add race result</p>
+  <div class="place-buttons">
+    <button class="place-btn pb1" onclick="modalAddPoints(1)">🥇 1st<small>+1 pt</small></button>
+    <button class="place-btn pb2" onclick="modalAddPoints(2)">🥈 2nd<small>+2 pts</small></button>
+    <button class="place-btn pb3" onclick="modalAddPoints(3)">🥉 3rd<small>+3 pts</small></button>
+    <button class="place-btn pb4" onclick="modalAddPoints(4)">4th<small>+4 pts</small></button>
+  </div>
+
+  <button class="undo-btn" onclick="modalRemovePoints()">− Remove 1 point</button>
+  <button class="delete-btn" onclick="modalDeletePlayer()">🗑 Remove player</button>
 </div>
 
 <div id="toast"></div>
 
 <script>
-  // Points map: finishing position → points
+  const AVATARS = [
+    '🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪',
+    '🐱','🐶','🦊','🐸','🐼','🦁','🐯','🐨',
+    '🚗','🏎️','🚀','⭐','🔥','💎','👾','🎭'
+  ];
+
   const PLACE_POINTS = { 1: 1, 2: 2, 3: 3, 4: 4 };
 
-  // State
   let players = [];
+  let selectedAddAvatar = AVATARS[0];
+  let activePlayerId = null;
 
-  function save() {
-    localStorage.setItem('mk_players', JSON.stringify(players));
-  }
+  // ── Persistence ──────────────────────────────────────
+  function save() { localStorage.setItem('mk_v2', JSON.stringify(players)); }
 
   function load() {
     try {
-      const raw = localStorage.getItem('mk_players');
+      const raw = localStorage.getItem('mk_v2');
       if (raw) players = JSON.parse(raw);
+      // migrate old saves that had no places/avatar
+      players = players.map(p => ({
+        avatar: '🔴',
+        places: { 1: 0, 2: 0, 3: 0, 4: 0 },
+        ...p
+      }));
     } catch (_) { players = []; }
   }
 
+  // ── Avatar row (add-player section) ──────────────────
+  function buildAddAvatarRow() {
+    const row = document.getElementById('addAvatarRow');
+    row.innerHTML = AVATARS.map(a => `
+      <button class="avatar-opt${a === selectedAddAvatar ? ' selected' : ''}"
+              onclick="selectAddAvatar('${a}')">${a}</button>
+    `).join('');
+  }
+
+  function selectAddAvatar(emoji) {
+    selectedAddAvatar = emoji;
+    buildAddAvatarRow();
+  }
+
+  // ── Add player ───────────────────────────────────────
   function addPlayer() {
     const input = document.getElementById('playerNameInput');
     const name = input.value.trim();
@@ -301,52 +583,134 @@
       toast('Player already exists!');
       return;
     }
-    players.push({ id: Date.now(), name, points: 0, races: 0 });
+    players.push({
+      id: Date.now(),
+      name,
+      avatar: selectedAddAvatar,
+      points: 0,
+      races: 0,
+      places: { 1: 0, 2: 0, 3: 0, 4: 0 }
+    });
     input.value = '';
     save();
     render();
     toast(`${name} added!`);
   }
 
-  function addPoints(id, place) {
-    const pts = PLACE_POINTS[place] ?? 0;
-    const player = players.find(p => p.id === id);
-    if (!player) return;
-    player.points += pts;
-    player.races += 1;
-    save();
-    render();
-    toast(`+${pts} pts to ${player.name} (P${place})`);
+  // ── Modal ─────────────────────────────────────────────
+  function openModal(id) {
+    activePlayerId = id;
+    const p = players.find(x => x.id === id);
+    if (!p) return;
+
+    document.getElementById('modalAvatarEmoji').textContent = p.avatar;
+    document.getElementById('modalName').textContent = p.name;
+    document.getElementById('modalPts').textContent = p.points;
+    document.getElementById('modalRaces').textContent = p.races;
+    document.getElementById('bd1').textContent = p.places[1];
+    document.getElementById('bd2').textContent = p.places[2];
+    document.getElementById('bd3').textContent = p.places[3];
+    document.getElementById('bd4').textContent = p.places[4];
+
+    buildModalAvatarPicker(p.avatar);
+
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('playerModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
 
-  function removePoints(id) {
-    const player = players.find(p => p.id === id);
-    if (!player || player.points === 0) return;
-    player.points = Math.max(0, player.points - 1);
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('playerModal').classList.remove('open');
+    document.getElementById('modalAvatarPicker').classList.remove('open');
+    document.body.style.overflow = '';
+    activePlayerId = null;
+  }
+
+  function toggleAvatarPicker() {
+    document.getElementById('modalAvatarPicker').classList.toggle('open');
+  }
+
+  function buildModalAvatarPicker(current) {
+    const picker = document.getElementById('modalAvatarPicker');
+    picker.innerHTML = AVATARS.map(a => `
+      <button class="avatar-opt${a === current ? ' selected' : ''}"
+              onclick="pickModalAvatar('${a}')">${a}</button>
+    `).join('');
+  }
+
+  function pickModalAvatar(emoji) {
+    if (!activePlayerId) return;
+    const p = players.find(x => x.id === activePlayerId);
+    if (!p) return;
+    p.avatar = emoji;
+    document.getElementById('modalAvatarEmoji').textContent = emoji;
+    buildModalAvatarPicker(emoji);
+    document.getElementById('modalAvatarPicker').classList.remove('open');
     save();
     render();
   }
 
-  function removePlayer(id) {
-    const player = players.find(p => p.id === id);
-    if (!player) return;
-    if (!confirm(`Remove ${player.name} from the leaderboard?`)) return;
-    players = players.filter(p => p.id !== id);
+  function modalAddPoints(place) {
+    if (!activePlayerId) return;
+    const p = players.find(x => x.id === activePlayerId);
+    if (!p) return;
+    const pts = PLACE_POINTS[place];
+    p.points += pts;
+    p.races += 1;
+    p.places[place] = (p.places[place] || 0) + 1;
     save();
+    // update modal live
+    document.getElementById('modalPts').textContent = p.points;
+    document.getElementById('modalRaces').textContent = p.races;
+    document.getElementById(`bd${place}`).textContent = p.places[place];
     render();
+    toast(`+${pts} pts to ${p.name}`);
   }
 
+  function modalRemovePoints() {
+    if (!activePlayerId) return;
+    const p = players.find(x => x.id === activePlayerId);
+    if (!p || p.points === 0) { toast('Already at 0!'); return; }
+    p.points = Math.max(0, p.points - 1);
+    save();
+    document.getElementById('modalPts').textContent = p.points;
+    render();
+    toast(`−1 pt from ${p.name}`);
+  }
+
+  function modalDeletePlayer() {
+    if (!activePlayerId) return;
+    const p = players.find(x => x.id === activePlayerId);
+    if (!p) return;
+    if (!confirm(`Remove ${p.name} from the leaderboard?`)) return;
+    players = players.filter(x => x.id !== activePlayerId);
+    save();
+    closeModal();
+    render();
+    toast(`${p.name} removed`);
+  }
+
+  // ── Render ────────────────────────────────────────────
   function rankEmoji(rank) {
     if (rank === 1) return '🥇';
     if (rank === 2) return '🥈';
     if (rank === 3) return '🥉';
-    return `${rank}`;
+    return `<span style="font-size:0.9rem;font-weight:700;color:var(--muted)">${rank}</span>`;
+  }
+
+  function placesHtml(places) {
+    const chips = [];
+    if (places[1]) chips.push(`<span class="place-chip c1">🥇×${places[1]}</span>`);
+    if (places[2]) chips.push(`<span class="place-chip c2">🥈×${places[2]}</span>`);
+    if (places[3]) chips.push(`<span class="place-chip c3">🥉×${places[3]}</span>`);
+    if (places[4]) chips.push(`<span class="place-chip">4th×${places[4]}</span>`);
+    return chips.join('');
   }
 
   function render() {
     const board = document.getElementById('leaderboard');
     const empty = document.getElementById('emptyState');
-
     const sorted = [...players].sort((a, b) => b.points - a.points);
 
     if (sorted.length === 0) {
@@ -357,33 +721,28 @@
 
     empty.style.display = 'none';
 
-    board.innerHTML = sorted.map((player, idx) => {
+    board.innerHTML = sorted.map((p, idx) => {
       const rank = idx + 1;
-      const avg = player.races > 0 ? (player.points / player.races).toFixed(1) : '—';
+      const chips = placesHtml(p.places || {});
       return `
-        <div class="player-card rank-${rank <= 3 ? rank : ''}">
-          <div class="rank">${rankEmoji(rank)}</div>
-          <div class="player-info">
-            <div class="player-name">${escHtml(player.name)}</div>
-            <div class="player-score">${player.races} race${player.races !== 1 ? 's' : ''} · avg ${avg} pts</div>
+        <div class="player-card${rank <= 3 ? ` rank-${rank}` : ''}" onclick="openModal(${p.id})">
+          <div class="card-rank">${rankEmoji(rank)}</div>
+          <div class="card-avatar">${p.avatar || '🔴'}</div>
+          <div class="card-info">
+            <div class="card-name">${escHtml(p.name)}</div>
+            <div class="card-places">${chips || '<span class="place-chip">No races yet</span>'}</div>
           </div>
-          <div class="total-points">${player.points}</div>
-          <div class="point-controls">
-            <button class="points-btn p1" title="+1 (1st place)" onclick="addPoints(${player.id}, 1)">P1</button>
-            <button class="points-btn p2" title="+2 (2nd place)" onclick="addPoints(${player.id}, 2)">P2</button>
-            <button class="points-btn p3" title="+3 (3rd place)" onclick="addPoints(${player.id}, 3)">P3</button>
-            <button class="points-btn p4" title="+4 (4th place)" onclick="addPoints(${player.id}, 4)">P4</button>
-            <button class="points-btn minus" title="Remove 1 point" onclick="removePoints(${player.id})">−</button>
-          </div>
-          <button class="btn btn-danger remove-btn" title="Remove player" onclick="removePlayer(${player.id})">✕</button>
+          <div class="card-points">${p.points}</div>
+          <div class="card-chevron">›</div>
         </div>`;
     }).join('');
   }
 
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  // ── Toast ─────────────────────────────────────────────
   let toastTimer;
   function toast(msg) {
     const el = document.getElementById('toast');
@@ -393,12 +752,13 @@
     toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
   }
 
-  // Enter key on input
+  // ── Init ──────────────────────────────────────────────
   document.getElementById('playerNameInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') addPlayer();
   });
 
   load();
+  buildAddAvatarRow();
   render();
 </script>
 </body>
