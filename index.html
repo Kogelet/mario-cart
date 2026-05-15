@@ -50,6 +50,7 @@
     .race-btn:active{transform:translateY(3px);border-bottom-width:1px;}
 
     .slabel{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:8px;margin-left:2px;font-weight:700;}
+    .slabel-lg{font-size:1.36rem;letter-spacing:3px;}
 
     /* ── LEADERBOARD PANEL ── */
     .board-panel{
@@ -235,7 +236,7 @@
 <div class="main">
   <button class="race-btn" onclick="openRaceModal()">🏁 &nbsp;START NEW RACE</button>
 
-  <p class="slabel">🏆 Standings</p>
+  <p class="slabel slabel-lg">🏆 Standings</p>
   <div class="board-panel" id="board"></div>
   <div class="empty" id="emptyState" style="display:none">
     <div class="icon">🎮</div>
