@@ -86,15 +86,15 @@
     .c-rank { font-size:1.1rem; font-weight:900; width:26px; text-align:center; flex-shrink:0; color:var(--muted); }
     .c-rank.top { color:var(--text); }
     .c-av { font-size:2rem; width:46px; height:46px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.06); border-radius:12px; flex-shrink:0; }
-    /* BIG name — as prominent as the avatar */
     .c-name { flex:1; font-size:1.35rem; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
-    /* Stats column on the RIGHT */
-    .c-right { flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
-    .c-medals { display:flex; gap:7px; }
-    .mstat { font-size:.75rem; font-weight:800; display:flex; align-items:center; gap:2px; }
-    .mstat.dim { opacity:.28; }
+    /* Medal stats — middle column between name and points */
+    .c-medals { flex-shrink:0; display:flex; flex-direction:column; gap:2px; align-items:flex-start; }
+    .mstat { font-size:.76rem; font-weight:800; display:flex; align-items:center; gap:3px; white-space:nowrap; }
+    .mstat.dim { opacity:.25; }
+    /* Points — right column */
+    .c-pts { flex-shrink:0; text-align:right; }
     .c-pts-num { font-size:1.7rem; font-weight:900; color:var(--yellow); line-height:1; }
-    .c-pts-lbl { font-size:.58rem; color:var(--muted); text-transform:uppercase; font-weight:700; text-align:right; }
+    .c-pts-lbl { font-size:.58rem; color:var(--muted); text-transform:uppercase; font-weight:700; }
     .c-chev { color:var(--muted); font-size:1rem; flex-shrink:0; margin-left:2px; }
 
     .empty { text-align:center; padding:40px 0; color:var(--muted); }
@@ -566,12 +566,12 @@ function render() {
       <div class="c-rank${r<=3?' top':''}">${ri}</div>
       <div class="c-av">${p.avatar}</div>
       <div class="c-name">${esc(p.name)}</div>
-      <div class="c-right">
-        <div class="c-medals">
-          <span class="mstat${p.places[1]?'':' dim'}">🥇${p.places[1]}</span>
-          <span class="mstat${p.places[2]?'':' dim'}">🥈${p.places[2]}</span>
-          <span class="mstat${p.places[3]?'':' dim'}">🥉${p.places[3]}</span>
-        </div>
+      <div class="c-medals">
+        <span class="mstat${p.places[1]?'':' dim'}">🥇 ${p.places[1]}</span>
+        <span class="mstat${p.places[2]?'':' dim'}">🥈 ${p.places[2]}</span>
+        <span class="mstat${p.places[3]?'':' dim'}">🥉 ${p.places[3]}</span>
+      </div>
+      <div class="c-pts">
         <div class="c-pts-num">${p.points}</div>
         <div class="c-pts-lbl">pts</div>
       </div>
