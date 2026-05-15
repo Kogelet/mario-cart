@@ -118,7 +118,8 @@
     .c-stat .st-icon{font-size:.75rem;line-height:1;}
     .c-stat .st-num {font-size:1rem;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;}
     .c-stat .st-num{color:#fff;}
-    .c-stat.dim .st-num{opacity:.25;}
+    .c-stat.dim .st-icon{opacity:.35;}
+    .c-stat.dim .st-num{opacity:.5;}
 
     /* Score */
     .c-score{
@@ -670,10 +671,10 @@
         <div class="c-rank">${rankDisp}</div>
         <div class="c-av">${p.avatar}</div>
         <div class="c-name">${esc(p.name)}</div>
-        <div class="c-stat gold  ${p.places[1]?'':'dim'}"><span class="st-icon">🥇</span><span class="st-num">${p.places[1]}</span></div>
-        <div class="c-stat silver${p.places[2]?'':'dim'}"><span class="st-icon">🥈</span><span class="st-num">${p.places[2]}</span></div>
-        <div class="c-stat bronze${p.places[3]?'':'dim'}"><span class="st-icon">🥉</span><span class="st-num">${p.places[3]}</span></div>
-        <div class="c-stat pred  ${(p.predictions||0)?'':'dim'}"><span class="st-icon">🪄</span><span class="st-num">${p.predictions||0}</span></div>
+        <div class="c-stat gold   ${p.places[1]?'':'dim'}"><span class="st-icon">🥇</span><span class="st-num">${p.places[1]}</span></div>
+        <div class="c-stat silver ${p.places[2]?'':'dim'}"><span class="st-icon">🥈</span><span class="st-num">${p.places[2]}</span></div>
+        <div class="c-stat bronze ${p.places[3]?'':'dim'}"><span class="st-icon">🥉</span><span class="st-num">${p.places[3]}</span></div>
+        <div class="c-stat pred   ${(p.predictions||0)?'':'dim'}"><span class="st-icon">🪄</span><span class="st-num">${p.predictions||0}</span></div>
         <div class="c-score">${p.points}</div>
       </div>`;
     }).join('');
