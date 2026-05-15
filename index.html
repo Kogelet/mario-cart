@@ -179,7 +179,7 @@
     .sel-name{font-weight:900;flex:1;font-size:.95rem;}
     .sel-chk{font-size:1.1rem;width:22px;text-align:center;}
     .pos-slots{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
-    .pos-slot{display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,.05);border-left:3px solid rgba(255,255,255,.12);border-radius:6px;}
+    .pos-slot{display:flex;align-items:center;gap:8px;padding:0 10px;height:40px;background:rgba(255,255,255,.05);border-left:3px solid rgba(255,255,255,.12);border-radius:6px;}
     .pos-icon{font-size:1rem;width:26px;text-align:center;flex-shrink:0;}
     .pos-bonus{font-size:.65rem;color:var(--muted);font-weight:700;width:32px;flex-shrink:0;text-align:center;}
     .pos-name{flex:1;font-weight:900;font-size:.9rem;}
@@ -575,7 +575,7 @@
   // ── Render ───────────────────────────────────────────
   function render() {
     document.getElementById('headerSub').textContent=
-      `${players.length} player${players.length!==1?'s':''} · ${raceCount} race${raceCount!==1?'s':''}`;
+      `${players.length} player${players.length!==1?'s':''}`;
 
     const sorted=[...players].sort((a,b)=>b.points-a.points);
     const board=document.getElementById('board');
