@@ -5,336 +5,229 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mario Kart Leaderboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
+
+  <!--
+  ═══════════════════════════════════════════════════════
+  SHARED DATABASE SETUP (Firebase Realtime Database)
+  ═══════════════════════════════════════════════════════
+  1. Go to https://console.firebase.google.com
+  2. Create a new project (free Spark plan is enough)
+  3. Click "Web" (</>) to add a web app → copy the firebaseConfig
+  4. In left menu: Build → Realtime Database → Create database
+     → Start in TEST MODE (allows read/write without login)
+  5. Replace the values in FIREBASE_CONFIG below with yours
+  6. Commit & push → everyone shares the same live data!
+
+  Without this, the app still works but data is device-local only.
+  ═══════════════════════════════════════════════════════
+  -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <style>
     :root {
-      --red: #E52521;
-      --blue: #049CD8;
-      --yellow: #FBD000;
-      --green: #43B047;
-      --dark: #0d0b1e;
-      --card: #13112a;
-      --border: #2a2550;
-      --text: #fff;
-      --muted: #8888aa;
-      --gold: #FFD700;
-      --silver: #C0C0C0;
-      --bronze: #CD7F32;
+      --red: #E52521; --blue: #049CD8; --yellow: #FBD000;
+      --green: #43B047; --dark: #0d0b1e; --card: #13112a;
+      --border: #2a2550; --text: #fff; --muted: #8888aa;
+      --gold: #FFD700; --silver: #C0C0C0; --bronze: #CD7F32;
       --purple: #a855f7;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--dark);
-      color: var(--text);
-      font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-    }
+    body { background: var(--dark); color: var(--text); font-family: 'Nunito', system-ui, sans-serif; min-height: 100vh; }
 
     /* ── HEADER ── */
     header {
       background: var(--red);
       background-image: repeating-conic-gradient(rgba(0,0,0,0.13) 0% 25%, transparent 0% 50%);
       background-size: 24px 24px;
-      padding: 26px 20px 22px;
-      text-align: center;
-      border-bottom: 5px solid #8B0000;
+      padding: 24px 20px 18px;
+      text-align: center; border-bottom: 5px solid #8B0000;
       position: relative;
     }
-    header::before { content: '🏁'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 1.8rem; opacity: 0.5; }
-    header::after  { content: '🏁'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 1.8rem; opacity: 0.5; }
+    header::before { content:'🏁'; position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:1.8rem; opacity:.5; }
+    header::after  { content:'🏁'; position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:1.8rem; opacity:.5; }
     .h-title {
       font-family: 'Press Start 2P', cursive;
-      font-size: clamp(0.8rem, 3.2vw, 1.2rem);
-      color: var(--yellow);
-      line-height: 1.7;
-      text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+      font-size: clamp(.8rem, 3.2vw, 1.2rem);
+      color: var(--yellow); line-height: 1.7;
+      text-shadow: 2px 2px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;
     }
-    .h-sub { font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 5px; font-weight: 700; }
+    .h-meta { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:5px; flex-wrap:wrap; }
+    .h-sub { font-size:.8rem; color:rgba(255,255,255,.75); font-weight:700; }
+    .sync-badge {
+      font-size:.68rem; font-weight:800; padding:2px 9px;
+      border-radius:999px; white-space:nowrap;
+    }
+    .sync-badge.local   { background:rgba(255,255,255,.12); color:rgba(255,255,255,.6); }
+    .sync-badge.syncing { background:rgba(251,208,0,.2);    color:var(--yellow); }
+    .sync-badge.live    { background:rgba(67,176,71,.25);   color:#6ee777; }
+    .sync-badge.error   { background:rgba(231,76,60,.25);   color:#ff8a80; }
 
     /* ── MAIN ── */
-    .main { max-width: 680px; margin: 0 auto; padding: 20px 16px 80px; }
+    .main { max-width:680px; margin:0 auto; padding:20px 16px 80px; }
 
     /* ── RACE BUTTON ── */
     .race-btn {
-      width: 100%; padding: 16px; margin-bottom: 28px;
-      background: var(--yellow); color: #111;
-      border: none; border-bottom: 4px solid #c8a000;
-      border-radius: 14px; font-family: 'Nunito', sans-serif;
-      font-size: 1.05rem; font-weight: 900;
-      cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
-      transition: transform 0.1s;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width:100%; padding:16px; margin-bottom:28px;
+      background:var(--yellow); color:#111;
+      border:none; border-bottom:4px solid #c8a000; border-radius:14px;
+      font-family:'Nunito',sans-serif; font-size:1.05rem; font-weight:900;
+      cursor:pointer; text-transform:uppercase; letter-spacing:.5px;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      transition:transform .1s;
     }
-    .race-btn:active { transform: translateY(3px); border-bottom-width: 1px; }
+    .race-btn:active { transform:translateY(3px); border-bottom-width:1px; }
 
-    /* ── SECTION LABEL ── */
-    .slabel {
-      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;
-      color: var(--muted); margin-bottom: 10px; margin-left: 2px; font-weight: 700;
-    }
+    .slabel { font-size:.7rem; text-transform:uppercase; letter-spacing:2px; color:var(--muted); margin-bottom:10px; margin-left:2px; font-weight:700; }
 
-    /* ── LEADERBOARD ── */
-    .board { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+    /* ── LEADERBOARD CARDS ── */
+    .board { display:flex; flex-direction:column; gap:10px; margin-bottom:32px; }
     .pcard {
-      display: flex; align-items: center; gap: 11px;
-      background: var(--card); border: 2px solid var(--border);
-      border-radius: 16px; padding: 13px 12px;
-      cursor: pointer; transition: transform 0.1s;
-      animation: popIn 0.25s ease; position: relative; overflow: hidden;
-      -webkit-tap-highlight-color: transparent;
+      display:flex; align-items:center; gap:11px;
+      background:var(--card); border:2px solid var(--border);
+      border-radius:16px; padding:12px 12px;
+      cursor:pointer; transition:transform .1s;
+      animation:popIn .25s ease; position:relative; overflow:hidden;
+      -webkit-tap-highlight-color:transparent;
     }
-    .pcard::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-    .pcard.r1::before { background: var(--gold); }
-    .pcard.r2::before { background: var(--silver); }
-    .pcard.r3::before { background: var(--bronze); }
-    .pcard.r1 { border-color: rgba(255,215,0,.35); }
-    .pcard.r2 { border-color: rgba(192,192,192,.25); }
-    .pcard.r3 { border-color: rgba(205,127,50,.25); }
-    .pcard:active { transform: scale(0.98); }
-    @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .pcard::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; }
+    .pcard.r1::before { background:var(--gold); }
+    .pcard.r2::before { background:var(--silver); }
+    .pcard.r3::before { background:var(--bronze); }
+    .pcard.r1 { border-color:rgba(255,215,0,.35); }
+    .pcard.r2 { border-color:rgba(192,192,192,.25); }
+    .pcard.r3 { border-color:rgba(205,127,50,.25); }
+    .pcard:active { transform:scale(.98); }
+    @keyframes popIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
 
-    .c-rank { font-size: 1.1rem; font-weight: 900; width: 28px; text-align: center; flex-shrink: 0; color: var(--muted); }
-    .c-rank.top { color: var(--text); }
-    .c-av { font-size: 1.9rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.06); border-radius: 11px; flex-shrink: 0; }
-    .c-info { flex: 1; min-width: 0; }
-    .c-name { font-size: 1rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .c-medals { display: flex; gap: 8px; margin-top: 4px; }
-    .mstat { display: flex; align-items: center; gap: 2px; font-size: 0.78rem; font-weight: 800; }
-    .mstat.dim { opacity: 0.3; }
-    .c-pts { text-align: right; flex-shrink: 0; }
-    .c-pts-num { font-size: 1.8rem; font-weight: 900; color: var(--yellow); line-height: 1; }
-    .c-pts-lbl { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
-    .c-chev { color: var(--muted); font-size: 1rem; flex-shrink: 0; margin-left: 2px; }
+    .c-rank { font-size:1.1rem; font-weight:900; width:26px; text-align:center; flex-shrink:0; color:var(--muted); }
+    .c-rank.top { color:var(--text); }
+    .c-av { font-size:2rem; width:46px; height:46px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.06); border-radius:12px; flex-shrink:0; }
+    /* BIG name — as prominent as the avatar */
+    .c-name { flex:1; font-size:1.35rem; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+    /* Stats column on the RIGHT */
+    .c-right { flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+    .c-medals { display:flex; gap:7px; }
+    .mstat { font-size:.75rem; font-weight:800; display:flex; align-items:center; gap:2px; }
+    .mstat.dim { opacity:.28; }
+    .c-pts-num { font-size:1.7rem; font-weight:900; color:var(--yellow); line-height:1; }
+    .c-pts-lbl { font-size:.58rem; color:var(--muted); text-transform:uppercase; font-weight:700; text-align:right; }
+    .c-chev { color:var(--muted); font-size:1rem; flex-shrink:0; margin-left:2px; }
 
-    .empty { text-align: center; padding: 40px 0; color: var(--muted); }
-    .empty .icon { font-size: 3rem; margin-bottom: 10px; }
+    .empty { text-align:center; padding:40px 0; color:var(--muted); }
+    .empty .icon { font-size:3rem; margin-bottom:10px; }
 
     /* ── ADD PLAYER ── */
-    .add-section { margin-top: 28px; }
-    .add-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .add-section { margin-top:28px; }
+    .add-row { display:flex; gap:10px; margin-bottom:12px; }
     .add-row input {
-      flex: 1; min-width: 0; padding: 13px 15px;
-      border-radius: 12px; border: 2px solid var(--border);
-      background: var(--card); color: var(--text);
-      font-size: 1rem; font-family: 'Nunito', sans-serif; font-weight: 700;
-      outline: none; transition: border-color 0.2s;
+      flex:1; min-width:0; padding:13px 15px;
+      border-radius:12px; border:2px solid var(--border);
+      background:var(--card); color:var(--text);
+      font-size:1rem; font-family:'Nunito',sans-serif; font-weight:700;
+      outline:none; transition:border-color .2s;
     }
-    .add-row input:focus { border-color: var(--yellow); }
-    .add-row input::placeholder { color: var(--muted); font-weight: 500; }
-    .btn-next {
-      padding: 13px 18px; border-radius: 12px; border: none;
-      background: var(--blue); color: #fff;
-      font-size: 0.95rem; font-weight: 900; font-family: 'Nunito', sans-serif;
-      cursor: pointer; white-space: nowrap; flex-shrink: 0;
-      transition: transform 0.1s;
-    }
-    .btn-next:active { transform: scale(0.96); }
+    .add-row input:focus { border-color:var(--yellow); }
+    .add-row input::placeholder { color:var(--muted); font-weight:500; }
+    .btn-next { padding:13px 18px; border-radius:12px; border:none; background:var(--blue); color:#fff; font-size:.95rem; font-weight:900; font-family:'Nunito',sans-serif; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:transform .1s; }
+    .btn-next:active { transform:scale(.96); }
 
-    .av-step { display: none; animation: fadeUp 0.22s ease; }
-    .av-step.open { display: block; }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-    .av-step-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-    .chosen-name { color: var(--yellow); font-weight: 900; }
-
-    .av-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
-      gap: 7px; max-height: 210px; overflow-y: auto; margin-bottom: 12px; padding: 2px;
-    }
-    .av-opt {
-      width: 46px; height: 46px; border-radius: 11px;
-      border: 2px solid transparent; background: var(--card);
-      font-size: 1.35rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: border-color 0.15s, transform 0.1s;
-    }
-    .av-opt:active { transform: scale(0.88); }
-    .av-opt.sel { border-color: var(--yellow); background: rgba(251,208,0,.12); }
-
-    .btn-add {
-      width: 100%; padding: 13px; border-radius: 12px;
-      border: none; border-bottom: 3px solid #2d7a31;
-      background: var(--green); color: #fff;
-      font-size: 1rem; font-weight: 900; font-family: 'Nunito', sans-serif;
-      cursor: pointer; transition: transform 0.1s;
-    }
-    .btn-add:active { transform: translateY(2px); border-bottom-width: 1px; }
+    .av-step { display:none; animation:fadeUp .22s ease; }
+    .av-step.open { display:block; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .av-step-hdr { margin-bottom:8px; }
+    .chosen-name { color:var(--yellow); font-weight:900; }
+    .av-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(46px,1fr)); gap:7px; max-height:210px; overflow-y:auto; margin-bottom:12px; padding:2px; }
+    .av-opt { width:46px; height:46px; border-radius:11px; border:2px solid transparent; background:var(--card); font-size:1.35rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color .15s,transform .1s; }
+    .av-opt:active { transform:scale(.88); }
+    .av-opt.sel { border-color:var(--yellow); background:rgba(251,208,0,.12); }
+    .btn-add { width:100%; padding:13px; border-radius:12px; border:none; border-bottom:3px solid #2d7a31; background:var(--green); color:#fff; font-size:1rem; font-weight:900; font-family:'Nunito',sans-serif; cursor:pointer; transition:transform .1s; }
+    .btn-add:active { transform:translateY(2px); border-bottom-width:1px; }
 
     /* ── OVERLAY ── */
-    #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 100; backdrop-filter: blur(3px); }
-    #overlay.open { display: block; }
+    #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:100; backdrop-filter:blur(3px); }
+    #overlay.open { display:block; }
 
     /* ── BOTTOM SHEET ── */
-    .sheet {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      max-width: 680px; margin: 0 auto;
-      background: #131128; border-radius: 24px 24px 0 0;
-      border-top: 2px solid var(--border);
-      padding: 0 20px 44px;
-      z-index: 101; transform: translateY(100%);
-      transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
-      max-height: 92vh; overflow-y: auto;
-    }
-    .sheet.open { transform: translateY(0); }
-    .s-handle { width: 40px; height: 4px; background: rgba(255,255,255,.18); border-radius: 2px; margin: 14px auto 20px; }
+    .sheet { position:fixed; bottom:0; left:0; right:0; max-width:680px; margin:0 auto; background:#131128; border-radius:24px 24px 0 0; border-top:2px solid var(--border); padding:0 20px 44px; z-index:101; transform:translateY(100%); transition:transform .35s cubic-bezier(.32,.72,0,1); max-height:92vh; overflow-y:auto; }
+    .sheet.open { transform:translateY(0); }
+    .s-handle { width:40px; height:4px; background:rgba(255,255,255,.18); border-radius:2px; margin:14px auto 20px; }
 
     /* ── RACE WIZARD ── */
-    .rstep { display: none; }
-    .rstep.active { display: block; }
-    .rs-title { font-family: 'Press Start 2P', cursive; font-size: 0.68rem; color: var(--yellow); text-align: center; margin-bottom: 5px; letter-spacing: 1px; }
-    .rs-sub { text-align: center; color: var(--muted); font-size: 0.83rem; font-weight: 700; margin-bottom: 16px; }
-
-    .sel-counter { text-align: center; font-size: 0.85rem; color: var(--muted); font-weight: 700; margin-bottom: 12px; }
-    .sel-counter strong { color: var(--yellow); font-size: 1rem; }
-
-    .sel-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-    .sel-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px; background: var(--card);
-      border: 2px solid var(--border); border-radius: 12px;
-      cursor: pointer; transition: border-color 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .sel-item.on { border-color: var(--yellow); background: rgba(251,208,0,.08); }
-    .sel-item.off { opacity: 0.38; pointer-events: none; }
-    .sel-name { font-weight: 900; flex: 1; font-size: 0.95rem; }
-    .sel-chk { font-size: 1.1rem; width: 22px; text-align: center; }
-
-    /* Position slots */
-    .pos-slots { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
-    .pos-slot {
-      display: flex; align-items: center; gap: 11px;
-      padding: 12px 14px; background: var(--card);
-      border: 2px solid var(--border); border-radius: 12px;
-    }
-    .pos-icon { font-size: 1.3rem; width: 34px; text-align: center; flex-shrink: 0; }
-    .pos-bonus { font-size: 0.7rem; color: var(--muted); font-weight: 700; width: 40px; flex-shrink: 0; text-align: center; }
-    .pos-name { flex: 1; font-weight: 900; font-size: 0.95rem; }
-    .pos-name.empty { color: var(--muted); font-weight: 500; font-style: italic; font-size: 0.85rem; }
-    .pos-clear { background: none; border: none; color: var(--muted); font-size: 1rem; cursor: pointer; padding: 4px 6px; }
-
-    .assign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-    .assign-btn {
-      display: flex; align-items: center; gap: 8px;
-      padding: 11px 12px; background: var(--card);
-      border: 2px solid var(--border); border-radius: 11px;
-      cursor: pointer; font-family: 'Nunito', sans-serif;
-      font-size: 0.88rem; font-weight: 900; color: var(--text);
-      transition: border-color 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .assign-btn:active { border-color: var(--yellow); }
-    .assign-av { font-size: 1.3rem; }
-
-    /* Predictions */
-    .pred-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-    .pred-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px; background: var(--card);
-      border: 2px solid var(--border); border-radius: 12px;
-      cursor: pointer; transition: border-color 0.15s, background 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .pred-item.on { border-color: var(--purple); background: rgba(168,85,247,.1); }
-    .pred-badge { font-size: 0.75rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: rgba(168,85,247,.2); color: #c084fc; white-space: nowrap; }
-
-    /* Nav buttons */
-    .rnav { display: flex; gap: 10px; }
-    .btn-back {
-      padding: 13px 16px; border-radius: 12px;
-      border: 2px solid var(--border); background: transparent;
-      color: var(--muted); font-size: 0.9rem; font-weight: 700;
-      font-family: 'Nunito', sans-serif; cursor: pointer; flex-shrink: 0;
-    }
-    .btn-fwd {
-      flex: 1; padding: 13px; border-radius: 12px;
-      border: none; border-bottom: 3px solid #c8a000;
-      background: var(--yellow); color: #111;
-      font-size: 0.95rem; font-weight: 900; font-family: 'Nunito', sans-serif;
-      cursor: pointer; transition: transform 0.1s;
-    }
-    .btn-fwd:active { transform: translateY(2px); border-bottom-width: 1px; }
-    .btn-fwd:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-    .btn-submit {
-      flex: 1; padding: 13px; border-radius: 12px;
-      border: none; border-bottom: 3px solid #8B0000;
-      background: var(--red); color: #fff;
-      font-size: 0.95rem; font-weight: 900; font-family: 'Nunito', sans-serif;
-      cursor: pointer; transition: transform 0.1s;
-    }
-    .btn-submit:active { transform: translateY(2px); border-bottom-width: 1px; }
+    .rstep { display:none; }
+    .rstep.active { display:block; }
+    .rs-title { font-family:'Press Start 2P',cursive; font-size:.68rem; color:var(--yellow); text-align:center; margin-bottom:5px; letter-spacing:1px; }
+    .rs-sub { text-align:center; color:var(--muted); font-size:.83rem; font-weight:700; margin-bottom:16px; }
+    .sel-counter { text-align:center; font-size:.85rem; color:var(--muted); font-weight:700; margin-bottom:12px; }
+    .sel-counter strong { color:var(--yellow); font-size:1rem; }
+    .sel-list { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+    .sel-item { display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--card); border:2px solid var(--border); border-radius:12px; cursor:pointer; transition:border-color .15s; -webkit-tap-highlight-color:transparent; }
+    .sel-item.on { border-color:var(--yellow); background:rgba(251,208,0,.08); }
+    .sel-item.off { opacity:.38; pointer-events:none; }
+    .sel-name { font-weight:900; flex:1; font-size:.95rem; }
+    .sel-chk { font-size:1.1rem; width:22px; text-align:center; }
+    .pos-slots { display:flex; flex-direction:column; gap:9px; margin-bottom:16px; }
+    .pos-slot { display:flex; align-items:center; gap:11px; padding:12px 14px; background:var(--card); border:2px solid var(--border); border-radius:12px; }
+    .pos-icon { font-size:1.3rem; width:34px; text-align:center; flex-shrink:0; }
+    .pos-bonus { font-size:.7rem; color:var(--muted); font-weight:700; width:40px; flex-shrink:0; text-align:center; }
+    .pos-name { flex:1; font-weight:900; font-size:.95rem; }
+    .pos-name.empty { color:var(--muted); font-weight:500; font-style:italic; font-size:.85rem; }
+    .pos-clear { background:none; border:none; color:var(--muted); font-size:1rem; cursor:pointer; padding:4px 6px; }
+    .assign-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+    .assign-btn { display:flex; align-items:center; gap:8px; padding:11px 12px; background:var(--card); border:2px solid var(--border); border-radius:11px; cursor:pointer; font-family:'Nunito',sans-serif; font-size:.88rem; font-weight:900; color:var(--text); transition:border-color .15s; -webkit-tap-highlight-color:transparent; }
+    .assign-btn:active { border-color:var(--yellow); }
+    .pred-list { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+    .pred-item { display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--card); border:2px solid var(--border); border-radius:12px; cursor:pointer; transition:border-color .15s,background .15s; -webkit-tap-highlight-color:transparent; }
+    .pred-item.on { border-color:var(--purple); background:rgba(168,85,247,.1); }
+    .pred-badge { font-size:.75rem; font-weight:800; padding:3px 9px; border-radius:999px; background:rgba(168,85,247,.2); color:#c084fc; white-space:nowrap; }
+    .rnav { display:flex; gap:10px; }
+    .btn-back { padding:13px 16px; border-radius:12px; border:2px solid var(--border); background:transparent; color:var(--muted); font-size:.9rem; font-weight:700; font-family:'Nunito',sans-serif; cursor:pointer; flex-shrink:0; }
+    .btn-fwd { flex:1; padding:13px; border-radius:12px; border:none; border-bottom:3px solid #c8a000; background:var(--yellow); color:#111; font-size:.95rem; font-weight:900; font-family:'Nunito',sans-serif; cursor:pointer; transition:transform .1s; }
+    .btn-fwd:active { transform:translateY(2px); border-bottom-width:1px; }
+    .btn-fwd:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+    .btn-submit { flex:1; padding:13px; border-radius:12px; border:none; border-bottom:3px solid #8B0000; background:var(--red); color:#fff; font-size:.95rem; font-weight:900; font-family:'Nunito',sans-serif; cursor:pointer; transition:transform .1s; }
+    .btn-submit:active { transform:translateY(2px); border-bottom-width:1px; }
 
     /* ── PLAYER MODAL ── */
-    .pm-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-    .pm-av-btn {
-      width: 60px; height: 60px; font-size: 2.1rem;
-      background: rgba(255,255,255,.06); border: 2px solid var(--border);
-      border-radius: 16px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; flex-shrink: 0; position: relative; transition: border-color 0.2s;
-    }
-    .pm-av-btn::after { content: '✏️'; position: absolute; bottom: -5px; right: -5px; font-size: 0.72rem; }
-    .pm-av-btn:active { border-color: var(--yellow); }
-    .pm-info { flex: 1; min-width: 0; }
-    .pm-name { font-size: 1.2rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pm-sub { font-size: 0.83rem; color: var(--muted); margin-top: 2px; font-weight: 700; }
-    .pm-sub span { color: var(--yellow); font-weight: 900; }
-
-    .pm-av-picker {
-      display: none; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-      gap: 6px; margin-bottom: 14px; padding: 12px;
-      background: rgba(255,255,255,.03); border-radius: 13px; border: 1px solid var(--border);
-    }
-    .pm-av-picker.open { display: grid; }
-
-    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 18px; }
-    .stat-cell { background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px 5px; text-align: center; }
-    .stat-cell .si { font-size: 1.3rem; }
-    .stat-cell .sn { font-size: 1.2rem; font-weight: 900; margin-top: 2px; }
-    .stat-cell .sl { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
-    .stat-cell.g { background: rgba(255,215,0,.1); }
-    .stat-cell.s { background: rgba(192,192,192,.07); }
-    .stat-cell.b { background: rgba(205,127,50,.1); }
-    .stat-cell.p { background: rgba(168,85,247,.1); }
-
-    .btn-undo {
-      width: 100%; padding: 12px; border-radius: 12px;
-      border: 2px solid var(--border); background: transparent;
-      color: var(--muted); font-size: 0.9rem; font-weight: 700;
-      font-family: 'Nunito', sans-serif; cursor: pointer;
-      transition: border-color 0.2s; margin-bottom: 10px;
-    }
-    .btn-undo:hover { border-color: #555; color: var(--text); }
-    .btn-del {
-      width: 100%; padding: 12px; border-radius: 12px;
-      border: 2px solid rgba(231,76,60,.45); background: transparent;
-      color: #e74c3c; font-size: 0.9rem; font-weight: 700;
-      font-family: 'Nunito', sans-serif; cursor: pointer; transition: background 0.2s;
-    }
-    .btn-del:hover { background: rgba(231,76,60,.1); }
+    .pm-top { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+    .pm-av-btn { width:60px; height:60px; font-size:2.1rem; background:rgba(255,255,255,.06); border:2px solid var(--border); border-radius:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; position:relative; transition:border-color .2s; }
+    .pm-av-btn::after { content:'✏️'; position:absolute; bottom:-5px; right:-5px; font-size:.72rem; }
+    .pm-av-btn:active { border-color:var(--yellow); }
+    .pm-info { flex:1; min-width:0; }
+    .pm-name { font-size:1.2rem; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .pm-sub { font-size:.83rem; color:var(--muted); margin-top:2px; font-weight:700; }
+    .pm-sub span { color:var(--yellow); font-weight:900; }
+    .pm-av-picker { display:none; grid-template-columns:repeat(auto-fill,minmax(44px,1fr)); gap:6px; margin-bottom:14px; padding:12px; background:rgba(255,255,255,.03); border-radius:13px; border:1px solid var(--border); }
+    .pm-av-picker.open { display:grid; }
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
+    .stat-cell { background:rgba(255,255,255,.04); border-radius:12px; padding:10px 5px; text-align:center; }
+    .stat-cell .si { font-size:1.3rem; }
+    .stat-cell .sn { font-size:1.2rem; font-weight:900; margin-top:2px; }
+    .stat-cell .sl { font-size:.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-weight:700; }
+    .stat-cell.g { background:rgba(255,215,0,.1); }
+    .stat-cell.s { background:rgba(192,192,192,.07); }
+    .stat-cell.b { background:rgba(205,127,50,.1); }
+    .stat-cell.p { background:rgba(168,85,247,.1); }
+    .btn-undo { width:100%; padding:12px; border-radius:12px; border:2px solid var(--border); background:transparent; color:var(--muted); font-size:.9rem; font-weight:700; font-family:'Nunito',sans-serif; cursor:pointer; transition:border-color .2s; margin-bottom:10px; }
+    .btn-undo:hover { border-color:#555; color:var(--text); }
+    .btn-del { width:100%; padding:12px; border-radius:12px; border:2px solid rgba(231,76,60,.45); background:transparent; color:#e74c3c; font-size:.9rem; font-weight:700; font-family:'Nunito',sans-serif; cursor:pointer; transition:background .2s; }
+    .btn-del:hover { background:rgba(231,76,60,.1); }
 
     /* ── TOAST ── */
-    #toast {
-      position: fixed; bottom: 24px; left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--green); color: #fff;
-      padding: 10px 22px; border-radius: 999px;
-      font-weight: 900; font-size: 0.88rem;
-      transition: transform 0.3s ease;
-      pointer-events: none; z-index: 200; white-space: nowrap;
-      font-family: 'Nunito', sans-serif;
-    }
-    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--green); color:#fff; padding:10px 22px; border-radius:999px; font-weight:900; font-size:.88rem; transition:transform .3s ease; pointer-events:none; z-index:200; white-space:nowrap; font-family:'Nunito',sans-serif; }
+    #toast.show { transform:translateX(-50%) translateY(0); }
 
-    @media (max-width: 380px) {
-      .assign-grid { grid-template-columns: 1fr; }
-      .c-pts-num { font-size: 1.5rem; }
-    }
+    @media (max-width:380px) { .assign-grid{grid-template-columns:1fr} .c-pts-num{font-size:1.4rem} }
   </style>
 </head>
 <body>
 
 <header>
   <div class="h-title">MARIO KART<br>LEADERBOARD</div>
-  <div class="h-sub" id="headerSub">0 players · 0 races</div>
+  <div class="h-meta">
+    <span class="h-sub" id="headerSub">0 players · 0 races</span>
+    <span class="sync-badge local" id="syncBadge">💾 Local</span>
+  </div>
 </header>
 
 <div class="main">
@@ -363,14 +256,11 @@
   </div>
 </div>
 
-<!-- Overlay -->
 <div id="overlay" onclick="overlayClick()"></div>
 
 <!-- Race Modal -->
 <div class="sheet" id="raceModal">
   <div class="s-handle"></div>
-
-  <!-- Step 1: pick racers -->
   <div class="rstep active" id="rs1">
     <div class="rs-title">🏁 New Race</div>
     <div class="rs-sub">Select exactly 4 players who are racing</div>
@@ -381,11 +271,9 @@
       <button class="btn-fwd" id="s1next" onclick="goStep2()" disabled>Assign Positions →</button>
     </div>
   </div>
-
-  <!-- Step 2: assign positions -->
   <div class="rstep" id="rs2">
     <div class="rs-title">🏎️ Positions</div>
-    <div class="rs-sub">Tap a player to place them — fastest first</div>
+    <div class="rs-sub">Tap a player to assign their finish</div>
     <div class="pos-slots" id="posSlots"></div>
     <p class="slabel" style="margin-bottom:8px" id="remainLabel">Tap to assign</p>
     <div class="assign-grid" id="assignGrid"></div>
@@ -394,14 +282,12 @@
       <button class="btn-fwd" id="s2next" onclick="goStep3()" disabled>Predictions →</button>
     </div>
   </div>
-
-  <!-- Step 3: predictions -->
   <div class="rstep" id="rs3">
     <div class="rs-title">⭐ Predictions</div>
-    <div class="rs-sub">Who predicted correctly? (+2 pts each, once per race)</div>
+    <div class="rs-sub">Who predicted correctly? (+2 pts, once per race)</div>
     <div class="pred-list" id="predList"></div>
     <div class="rnav">
-      <button class="btn-back" onclick="goStep2()">← Back</button>
+      <button class="btn-back" onclick="goStep2back()">← Back</button>
       <button class="btn-submit" onclick="submitRace()">🏁 Submit Race</button>
     </div>
   </div>
@@ -411,9 +297,7 @@
 <div class="sheet" id="playerModal">
   <div class="s-handle"></div>
   <div class="pm-top">
-    <div class="pm-av-btn" id="pmAvBtn" onclick="togglePmPicker()">
-      <span id="pmAvEmoji"></span>
-    </div>
+    <div class="pm-av-btn" id="pmAvBtn" onclick="togglePmPicker()"><span id="pmAvEmoji"></span></div>
     <div class="pm-info">
       <div class="pm-name" id="pmName"></div>
       <div class="pm-sub"><span id="pmPts">0</span> pts · <span id="pmRaces">0</span> races</div>
@@ -433,307 +317,308 @@
 <div id="toast"></div>
 
 <script>
-  const PLACE_POINTS = {1:4, 2:3, 3:2, 4:1};
-  const PRED_BONUS = 2;
+// ═══════════════════════════════════════════════════════
+// REPLACE these with your Firebase project values.
+// See setup instructions at the top of this file.
+// Leave as-is to use device-local storage only.
+// ═══════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  databaseURL:       "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId:         "YOUR_PROJECT",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+// ═══════════════════════════════════════════════════════
 
-  const AVATARS = [
-    '😀','😃','😄','😁','😆','🤣','😊','😇','🥰','😍','🤩','😎',
-    '🤓','🧐','😏','😌','🤗','🥳','😜','🤪','😝','🤑','😤','😡',
-    '🥶','😱','🤯','🥸','👻','💀','🤖','👾','😈','🤠','🤡','🥹',
-    '🐱','🐶','🦊','🐸','🐼','🦁','🐯','🐨','🐮','🐷','🐰','🐹',
-    '🐻','🐺','🦝','🦄','🐉','🦋','🦖','🐊','🦍','🐧','🦆','🦅',
-    '🏎️','🚗','🚀','⭐','🌟','🔥','💎','👑','🍄','🪙','🏆','⚡',
-  ];
+const PLACE_POINTS = {1:4,2:3,3:2,4:1};
+const PRED_BONUS   = 2;
+const AVATARS = [
+  '😀','😃','😄','😁','😆','🤣','😊','😇','🥰','😍','🤩','😎',
+  '🤓','🧐','😏','😌','🤗','🥳','😜','🤪','😝','🤑','😤','😡',
+  '🥶','😱','🤯','🥸','👻','💀','🤖','👾','😈','🤠','🤡','🥹',
+  '🐱','🐶','🦊','🐸','🐼','🦁','🐯','🐨','🐮','🐷','🐰','🐹',
+  '🐻','🐺','🦝','🦄','🐉','🦋','🦖','🐊','🦍','🐧','🦆','🦅',
+  '🏎️','🚗','🚀','⭐','🌟','🔥','💎','👑','🍄','🪙','🏆','⚡',
+];
 
-  let players   = [];
-  let raceCount = 0;
+let players   = [];
+let raceCount = 0;
+let db        = null;
 
-  // add-player wizard
-  let pendingName   = '';
-  let addAvatar     = AVATARS[0];
+// wizard state
+let racerIds    = [];
+let positions   = {};
+let predictions = new Set();
+let pendingName = '';
+let addAvatar   = AVATARS[0];
+let activeId    = null;
 
-  // race wizard
-  let racerIds    = [];
-  let positions   = {};   // { 1: id, 2: id, 3: id, 4: id }
-  let predictions = new Set();
+// ── Firebase ──────────────────────────────────────────
+function fbEnabled() { return !FIREBASE_CONFIG.databaseURL.includes('YOUR_'); }
 
-  // player modal
-  let activeId = null;
+function syncBadge(status) {
+  const el = document.getElementById('syncBadge');
+  const map = {
+    local:   {cls:'local',   txt:'💾 Local'},
+    syncing: {cls:'syncing', txt:'🔄 Syncing…'},
+    live:    {cls:'live',    txt:'🟢 Live'},
+    error:   {cls:'error',   txt:'🔴 Offline'},
+  };
+  const s = map[status]||map.local;
+  el.className = 'sync-badge ' + s.cls;
+  el.textContent = s.txt;
+}
 
-  // ── Storage ──────────────────────────────────────────
-  function save() {
-    localStorage.setItem('mk_v4', JSON.stringify({players, raceCount}));
-  }
-  function load() {
-    try {
-      const d = JSON.parse(localStorage.getItem('mk_v4') || 'null');
-      if (d) {
-        players   = (d.players || []).map(p => ({
-          avatar:'😀', places:{1:0,2:0,3:0,4:0}, predictions:0, races:0, points:0, ...p
-        }));
-        raceCount = d.raceCount || 0;
+function initFirebase() {
+  if (!fbEnabled()) { loadLocal(); render(); return; }
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+    syncBadge('syncing');
+    db.ref('leaderboard').on('value', snap => {
+      const data = snap.val();
+      if (data) {
+        players   = normArr(data.players).map(defPlayer);
+        raceCount = data.raceCount || 0;
+      } else {
+        // Firebase empty — push local data if any
+        const local = readLocal();
+        if (local.players.length) {
+          db.ref('leaderboard').set(local);
+          players   = local.players;
+          raceCount = local.raceCount;
+        }
       }
-    } catch(_) {}
-  }
+      syncBadge('live');
+      render();
+    }, () => { syncBadge('error'); loadLocal(); render(); });
+  } catch(e) { console.warn('Firebase init error', e); loadLocal(); render(); }
+}
 
-  // ── Add-player wizard ────────────────────────────────
-  function buildAvGrid(containerId, current, onSelect) {
-    document.getElementById(containerId).innerHTML = AVATARS.map((a,i) =>
-      `<button class="av-opt${a===current?' sel':''}" data-i="${i}" onclick="${onSelect}(this.dataset.i)">${a}</button>`
-    ).join('');
+async function save() {
+  localStorage.setItem('mk_v4', JSON.stringify({players, raceCount}));
+  if (db) {
+    syncBadge('syncing');
+    try { await db.ref('leaderboard').set({players, raceCount}); syncBadge('live'); }
+    catch(e) { syncBadge('error'); }
   }
+}
 
-  function selectAddAv(i)  { addAvatar = AVATARS[i]; buildAvGrid('avGrid', addAvatar, 'selectAddAv'); }
+function readLocal() {
+  try {
+    const d = JSON.parse(localStorage.getItem('mk_v4')||'null');
+    if (d) return { players: normArr(d.players).map(defPlayer), raceCount: d.raceCount||0 };
+  } catch(_) {}
+  return {players:[], raceCount:0};
+}
+function loadLocal() { const d = readLocal(); players = d.players; raceCount = d.raceCount; }
 
-  function goAvatarStep() {
-    const inp  = document.getElementById('nameInput');
-    const name = inp.value.trim();
-    if (!name) { inp.focus(); return; }
-    if (players.find(p => p.name.toLowerCase() === name.toLowerCase())) { toast('Player already exists!'); return; }
-    pendingName = name;
-    addAvatar   = AVATARS[0];
-    document.getElementById('chosenName').textContent = name;
-    buildAvGrid('avGrid', addAvatar, 'selectAddAv');
-    const step = document.getElementById('avStep');
-    step.classList.add('open');
-    step.scrollIntoView({behavior:'smooth', block:'nearest'});
-  }
+function normArr(v) { if (!v) return []; if (Array.isArray(v)) return v; return Object.values(v).filter(x=>x!=null); }
+function defPlayer(p) { return {avatar:'😀',places:{1:0,2:0,3:0,4:0},predictions:0,races:0,points:0,...p}; }
 
-  function confirmAdd() {
-    if (!pendingName) return;
-    players.push({id: Date.now(), name: pendingName, avatar: addAvatar, points:0, races:0, places:{1:0,2:0,3:0,4:0}, predictions:0});
-    document.getElementById('nameInput').value = '';
-    document.getElementById('avStep').classList.remove('open');
-    pendingName = '';
-    save(); render();
-    toast(`${players[players.length-1].name} joined! 🎉`);
-  }
+// ── Avatar grid builder ───────────────────────────────
+function buildAvGrid(containerId, cur, cbName) {
+  document.getElementById(containerId).innerHTML = AVATARS.map((a,i)=>
+    `<button class="av-opt${a===cur?' sel':''}" data-i="${i}" onclick="${cbName}(this.dataset.i)">${a}</button>`
+  ).join('');
+}
+function selectAddAv(i) { addAvatar=AVATARS[i]; buildAvGrid('avGrid',addAvatar,'selectAddAv'); }
 
-  // ── Race modal ────────────────────────────────────────
-  function openRaceModal() {
-    if (players.length < 2) { toast('Add at least 2 players first!'); return; }
-    racerIds=[]; positions={}; predictions=new Set();
-    showStep(1); buildStep1();
-    openSheet('raceModal');
-  }
-  function closeRaceModal() { closeSheet('raceModal'); }
+// ── Add player ────────────────────────────────────────
+function goAvatarStep() {
+  const inp  = document.getElementById('nameInput');
+  const name = inp.value.trim();
+  if (!name) { inp.focus(); return; }
+  if (players.find(p=>p.name.toLowerCase()===name.toLowerCase())) { toast('Player already exists!'); return; }
+  pendingName = name;
+  addAvatar   = AVATARS[0];
+  document.getElementById('chosenName').textContent = name;
+  buildAvGrid('avGrid', addAvatar, 'selectAddAv');
+  const step = document.getElementById('avStep');
+  step.classList.add('open');
+  step.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 
-  function showStep(n) {
-    ['rs1','rs2','rs3'].forEach((id,i) => document.getElementById(id).classList.toggle('active', i+1===n));
-  }
+function confirmAdd() {
+  if (!pendingName) return;
+  players.push({id:Date.now(),name:pendingName,avatar:addAvatar,points:0,races:0,places:{1:0,2:0,3:0,4:0},predictions:0});
+  document.getElementById('nameInput').value = '';
+  document.getElementById('avStep').classList.remove('open');
+  const name = pendingName; pendingName='';
+  save(); render(); toast(`${name} joined! 🎉`);
+}
 
-  // Step 1
-  function buildStep1() {
-    document.getElementById('selCount').textContent = racerIds.length;
-    document.getElementById('selList').innerHTML = players.map(p => {
-      const on  = racerIds.includes(p.id);
-      const off = !on && racerIds.length >= 4;
-      return `<div class="sel-item${on?' on':''}${off?' off':''}" onclick="toggleRacer(${p.id})">
-        <span style="font-size:1.5rem">${p.avatar}</span>
-        <span class="sel-name">${esc(p.name)}</span>
-        <span class="sel-chk">${on?'✅':''}</span>
-      </div>`;
-    }).join('');
-    document.getElementById('s1next').disabled = racerIds.length !== 4;
-  }
-  function toggleRacer(id) {
-    racerIds = racerIds.includes(id) ? racerIds.filter(r=>r!==id) : racerIds.length<4 ? [...racerIds,id] : racerIds;
-    buildStep1();
-  }
-  function goStep1() { showStep(1); buildStep1(); }
+// ── Race modal ────────────────────────────────────────
+function openRaceModal() {
+  if (players.length<2) { toast('Add at least 2 players first!'); return; }
+  racerIds=[]; positions={}; predictions=new Set();
+  showStep(1); buildStep1(); openSheet('raceModal');
+}
+function closeRaceModal() { closeSheet('raceModal'); }
 
-  // Step 2
-  function goStep2() { positions={}; showStep(2); buildStep2(); }
-  function buildStep2() {
-    const assigned   = Object.values(positions);
-    const remaining  = racerIds.filter(id => !assigned.includes(id));
-    const icons      = {1:'🥇',2:'🥈',3:'🥉',4:'4️⃣'};
-    const nextPos    = [1,2,3,4].find(p => !positions[p]);
+function showStep(n) {
+  ['rs1','rs2','rs3'].forEach((id,i)=>document.getElementById(id).classList.toggle('active',i+1===n));
+}
 
-    document.getElementById('posSlots').innerHTML = [1,2,3,4].map(pos => {
-      const pid = positions[pos];
-      const p   = pid ? players.find(x=>x.id===pid) : null;
-      return `<div class="pos-slot">
-        <span class="pos-icon">${icons[pos]}</span>
-        <span class="pos-bonus">+${PLACE_POINTS[pos]}pts</span>
-        <span class="pos-name${p?'':' empty'}">${p ? p.avatar+' '+esc(p.name) : 'Not assigned'}</span>
-        ${p ? `<button class="pos-clear" onclick="clearPos(${pos})">✕</button>` : ''}
-      </div>`;
-    }).join('');
+function buildStep1() {
+  document.getElementById('selCount').textContent = racerIds.length;
+  document.getElementById('selList').innerHTML = players.map(p => {
+    const on=racerIds.includes(p.id), off=!on&&racerIds.length>=4;
+    return `<div class="sel-item${on?' on':''}${off?' off':''}" onclick="toggleRacer(${p.id})">
+      <span style="font-size:1.5rem">${p.avatar}</span>
+      <span class="sel-name">${esc(p.name)}</span>
+      <span class="sel-chk">${on?'✅':''}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('s1next').disabled = racerIds.length!==4;
+}
+function toggleRacer(id) {
+  racerIds = racerIds.includes(id) ? racerIds.filter(r=>r!==id) : racerIds.length<4 ? [...racerIds,id] : racerIds;
+  buildStep1();
+}
+function goStep1() { showStep(1); buildStep1(); }
 
-    document.getElementById('remainLabel').textContent = nextPos
-      ? `Tap to assign ${icons[nextPos]} ${['','1st','2nd','3rd','4th'][nextPos]}`
-      : 'All assigned!';
+function goStep2() { positions={}; showStep(2); buildStep2(); }
+function goStep2back() { showStep(2); buildStep2(); }
+function buildStep2() {
+  const assigned  = Object.values(positions);
+  const remaining = racerIds.filter(id=>!assigned.includes(id));
+  const icons={1:'🥇',2:'🥈',3:'🥉',4:'4️⃣'};
+  const nextPos=[1,2,3,4].find(p=>!positions[p]);
+  document.getElementById('posSlots').innerHTML=[1,2,3,4].map(pos=>{
+    const pid=positions[pos], p=pid?players.find(x=>x.id===pid):null;
+    return `<div class="pos-slot">
+      <span class="pos-icon">${icons[pos]}</span>
+      <span class="pos-bonus">+${PLACE_POINTS[pos]}pts</span>
+      <span class="pos-name${p?'':' empty'}">${p?p.avatar+' '+esc(p.name):'Not assigned'}</span>
+      ${p?`<button class="pos-clear" onclick="clearPos(${pos})">✕</button>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('remainLabel').textContent = nextPos
+    ? `Tap to assign ${icons[nextPos]} ${['','1st','2nd','3rd','4th'][nextPos]}`
+    : 'All positions assigned!';
+  document.getElementById('assignGrid').innerHTML = remaining.map(id=>{
+    const p=players.find(x=>x.id===id);
+    return `<button class="assign-btn" onclick="assignPos(${p.id})">
+      <span style="font-size:1.3rem">${p.avatar}</span><span>${esc(p.name)}</span>
+    </button>`;
+  }).join('');
+  document.getElementById('s2next').disabled = Object.keys(positions).length!==4;
+}
+function assignPos(pid) { const next=[1,2,3,4].find(p=>!positions[p]); if(next){positions[next]=pid;buildStep2();} }
+function clearPos(pos) { delete positions[pos]; buildStep2(); }
 
-    document.getElementById('assignGrid').innerHTML = remaining.map(id => {
-      const p = players.find(x=>x.id===id);
-      return `<button class="assign-btn" onclick="assignPos(${p.id})">
-        <span class="assign-av">${p.avatar}</span><span>${esc(p.name)}</span>
-      </button>`;
-    }).join('');
+function goStep3() { predictions=new Set(); showStep(3); buildStep3(); }
+function buildStep3() {
+  document.getElementById('predList').innerHTML = players.map(p=>`
+    <div class="pred-item${predictions.has(p.id)?' on':''}" onclick="togglePred(${p.id})">
+      <span style="font-size:1.5rem">${p.avatar}</span>
+      <span style="font-weight:900;flex:1">${esc(p.name)}</span>
+      ${predictions.has(p.id)?'<span class="pred-badge">⭐ +2 pts</span>':''}
+    </div>`).join('');
+}
+function togglePred(id) { predictions.has(id)?predictions.delete(id):predictions.add(id); buildStep3(); }
 
-    document.getElementById('s2next').disabled = Object.keys(positions).length !== 4;
-  }
-  function assignPos(pid) {
-    const next = [1,2,3,4].find(p => !positions[p]);
-    if (next) { positions[next] = pid; buildStep2(); }
-  }
-  function clearPos(pos) { delete positions[pos]; buildStep2(); }
+function submitRace() {
+  [1,2,3,4].forEach(pos=>{
+    const p=players.find(x=>x.id===positions[pos]); if(!p)return;
+    p.points+=PLACE_POINTS[pos]; p.races+=1; p.places[pos]=(p.places[pos]||0)+1;
+  });
+  predictions.forEach(id=>{ const p=players.find(x=>x.id===id); if(p){p.points+=PRED_BONUS;p.predictions=(p.predictions||0)+1;} });
+  raceCount++;
+  save(); closeRaceModal(); render();
+  const w=players.find(x=>x.id===positions[1]);
+  toast(`Race ${raceCount} done! 🥇 ${w?w.name:''}`);
+}
 
-  // Step 3
-  function goStep3() { predictions=new Set(); showStep(3); buildStep3(); }
-  function buildStep3() {
-    document.getElementById('predList').innerHTML = players.map(p => `
-      <div class="pred-item${predictions.has(p.id)?' on':''}" onclick="togglePred(${p.id})">
-        <span style="font-size:1.5rem">${p.avatar}</span>
-        <span style="font-weight:900;flex:1">${esc(p.name)}</span>
-        ${predictions.has(p.id) ? '<span class="pred-badge">⭐ +2 pts</span>' : ''}
-      </div>`).join('');
-  }
-  function togglePred(id) {
-    predictions.has(id) ? predictions.delete(id) : predictions.add(id);
-    buildStep3();
-  }
+// ── Player modal ──────────────────────────────────────
+function openPlayerModal(id) {
+  activeId=id; const p=players.find(x=>x.id===id); if(!p)return;
+  document.getElementById('pmAvEmoji').textContent=p.avatar;
+  document.getElementById('pmName').textContent=p.name;
+  document.getElementById('pmPts').textContent=p.points;
+  document.getElementById('pmRaces').textContent=p.races;
+  document.getElementById('pm1').textContent=p.places[1];
+  document.getElementById('pm2').textContent=p.places[2];
+  document.getElementById('pm3').textContent=p.places[3];
+  document.getElementById('pmPred').textContent=p.predictions||0;
+  buildPmPicker(p.avatar); openSheet('playerModal');
+}
+function closePlayerModal() { document.getElementById('pmAvPicker').classList.remove('open'); closeSheet('playerModal'); activeId=null; }
+function togglePmPicker() { document.getElementById('pmAvPicker').classList.toggle('open'); }
+function buildPmPicker(cur) {
+  document.getElementById('pmAvPicker').innerHTML = AVATARS.map((a,i)=>
+    `<button class="av-opt${a===cur?' sel':''}" data-i="${i}" onclick="pickPmAv(this.dataset.i)">${a}</button>`
+  ).join('');
+}
+function pickPmAv(i) {
+  if(!activeId)return;
+  const p=players.find(x=>x.id===activeId); if(!p)return;
+  p.avatar=AVATARS[i];
+  document.getElementById('pmAvEmoji').textContent=p.avatar;
+  buildPmPicker(p.avatar);
+  document.getElementById('pmAvPicker').classList.remove('open');
+  save(); render();
+}
+function pmUndo() {
+  if(!activeId)return;
+  const p=players.find(x=>x.id===activeId); if(!p||p.points===0){toast('Already at 0!');return;}
+  p.points=Math.max(0,p.points-1);
+  document.getElementById('pmPts').textContent=p.points;
+  save(); render(); toast(`−1 pt from ${p.name}`);
+}
+function pmDelete() {
+  if(!activeId)return;
+  const p=players.find(x=>x.id===activeId); if(!p||!confirm(`Remove ${p.name}?`))return;
+  players=players.filter(x=>x.id!==activeId);
+  save(); closePlayerModal(); render(); toast(`${p.name} removed`);
+}
 
-  function submitRace() {
-    [1,2,3,4].forEach(pos => {
-      const p = players.find(x => x.id===positions[pos]);
-      if (!p) return;
-      p.points += PLACE_POINTS[pos];
-      p.races  += 1;
-      p.places[pos] = (p.places[pos]||0) + 1;
-    });
-    predictions.forEach(id => {
-      const p = players.find(x=>x.id===id);
-      if (p) { p.points += PRED_BONUS; p.predictions = (p.predictions||0)+1; }
-    });
-    raceCount++;
-    save(); closeRaceModal(); render();
-    const w = players.find(x=>x.id===positions[1]);
-    toast(`Race ${raceCount} done! 🥇 ${w?w.name:''}`);
-  }
+// ── Sheet helpers ─────────────────────────────────────
+function openSheet(id)  { document.getElementById('overlay').classList.add('open'); document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeSheet(id) { document.getElementById('overlay').classList.remove('open'); document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+function overlayClick() { if(document.getElementById('playerModal').classList.contains('open')) closePlayerModal(); }
 
-  // ── Player modal ──────────────────────────────────────
-  function openPlayerModal(id) {
-    activeId = id;
-    const p  = players.find(x=>x.id===id);
-    if (!p) return;
-    document.getElementById('pmAvEmoji').textContent = p.avatar;
-    document.getElementById('pmName').textContent    = p.name;
-    document.getElementById('pmPts').textContent     = p.points;
-    document.getElementById('pmRaces').textContent   = p.races;
-    document.getElementById('pm1').textContent       = p.places[1];
-    document.getElementById('pm2').textContent       = p.places[2];
-    document.getElementById('pm3').textContent       = p.places[3];
-    document.getElementById('pmPred').textContent    = p.predictions||0;
-    buildPmPicker(p.avatar);
-    openSheet('playerModal');
-  }
-  function closePlayerModal() {
-    document.getElementById('pmAvPicker').classList.remove('open');
-    closeSheet('playerModal');
-    activeId = null;
-  }
-  function togglePmPicker() { document.getElementById('pmAvPicker').classList.toggle('open'); }
-  function buildPmPicker(cur) {
-    document.getElementById('pmAvPicker').innerHTML = AVATARS.map((a,i) =>
-      `<button class="av-opt${a===cur?' sel':''}" data-i="${i}" onclick="pickPmAv(this.dataset.i)">${a}</button>`
-    ).join('');
-  }
-  function pickPmAv(i) {
-    if (!activeId) return;
-    const p = players.find(x=>x.id===activeId);
-    if (!p) return;
-    p.avatar = AVATARS[i];
-    document.getElementById('pmAvEmoji').textContent = p.avatar;
-    buildPmPicker(p.avatar);
-    document.getElementById('pmAvPicker').classList.remove('open');
-    save(); render();
-  }
-  function pmUndo() {
-    if (!activeId) return;
-    const p = players.find(x=>x.id===activeId);
-    if (!p||p.points===0) { toast('Already at 0!'); return; }
-    p.points = Math.max(0, p.points-1);
-    document.getElementById('pmPts').textContent = p.points;
-    save(); render(); toast(`−1 pt from ${p.name}`);
-  }
-  function pmDelete() {
-    if (!activeId) return;
-    const p = players.find(x=>x.id===activeId);
-    if (!p||!confirm(`Remove ${p.name}?`)) return;
-    players = players.filter(x=>x.id!==activeId);
-    save(); closePlayerModal(); render(); toast(`${p.name} removed`);
-  }
-
-  // ── Sheet helpers ─────────────────────────────────────
-  function openSheet(id) {
-    document.getElementById('overlay').classList.add('open');
-    document.getElementById(id).classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeSheet(id) {
-    document.getElementById('overlay').classList.remove('open');
-    document.getElementById(id).classList.remove('open');
-    document.body.style.overflow = '';
-  }
-  function overlayClick() {
-    // only close player modal on overlay tap; race modal needs explicit cancel
-    if (document.getElementById('playerModal').classList.contains('open')) closePlayerModal();
-  }
-
-  // ── Render ────────────────────────────────────────────
-  function render() {
-    document.getElementById('headerSub').textContent =
-      `${players.length} player${players.length!==1?'s':''} · ${raceCount} race${raceCount!==1?'s':''}`;
-
-    const sorted = [...players].sort((a,b)=>b.points-a.points);
-    const board  = document.getElementById('board');
-    const empty  = document.getElementById('emptyState');
-
-    if (!sorted.length) { board.innerHTML=''; empty.style.display='block'; return; }
-    empty.style.display = 'none';
-
-    board.innerHTML = sorted.map((p,i) => {
-      const r = i+1;
-      const ri = r===1?'🥇':r===2?'🥈':r===3?'🥉':r;
-      return `<div class="pcard${r<=3?` r${r}`:''}" onclick="openPlayerModal(${p.id})">
-        <div class="c-rank${r<=3?' top':''}">${ri}</div>
-        <div class="c-av">${p.avatar}</div>
-        <div class="c-info">
-          <div class="c-name">${esc(p.name)}</div>
-          <div class="c-medals">
-            <span class="mstat${p.places[1]?'':' dim'}">🥇 ${p.places[1]}</span>
-            <span class="mstat${p.places[2]?'':' dim'}">🥈 ${p.places[2]}</span>
-            <span class="mstat${p.places[3]?'':' dim'}">🥉 ${p.places[3]}</span>
-          </div>
+// ── Render ────────────────────────────────────────────
+function render() {
+  document.getElementById('headerSub').textContent =
+    `${players.length} player${players.length!==1?'s':''} · ${raceCount} race${raceCount!==1?'s':''}`;
+  const sorted=[...players].sort((a,b)=>b.points-a.points);
+  const board=document.getElementById('board');
+  document.getElementById('emptyState').style.display=sorted.length?'none':'block';
+  if (!sorted.length) { board.innerHTML=''; return; }
+  board.innerHTML=sorted.map((p,i)=>{
+    const r=i+1, ri=r===1?'🥇':r===2?'🥈':r===3?'🥉':r;
+    return `<div class="pcard${r<=3?` r${r}`:''}" onclick="openPlayerModal(${p.id})">
+      <div class="c-rank${r<=3?' top':''}">${ri}</div>
+      <div class="c-av">${p.avatar}</div>
+      <div class="c-name">${esc(p.name)}</div>
+      <div class="c-right">
+        <div class="c-medals">
+          <span class="mstat${p.places[1]?'':' dim'}">🥇${p.places[1]}</span>
+          <span class="mstat${p.places[2]?'':' dim'}">🥈${p.places[2]}</span>
+          <span class="mstat${p.places[3]?'':' dim'}">🥉${p.places[3]}</span>
         </div>
-        <div class="c-pts">
-          <div class="c-pts-num">${p.points}</div>
-          <div class="c-pts-lbl">pts</div>
-        </div>
-        <div class="c-chev">›</div>
-      </div>`;
-    }).join('');
-  }
+        <div class="c-pts-num">${p.points}</div>
+        <div class="c-pts-lbl">pts</div>
+      </div>
+      <div class="c-chev">›</div>
+    </div>`;
+  }).join('');
+}
 
-  function esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  // ── Toast ─────────────────────────────────────────────
-  let tt;
-  function toast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('show');
-    clearTimeout(tt);
-    tt = setTimeout(()=>el.classList.remove('show'), 2400);
-  }
+// ── Toast ─────────────────────────────────────────────
+let tt;
+function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('show'),2400); }
 
-  // ── Init ──────────────────────────────────────────────
-  document.getElementById('nameInput').addEventListener('keydown', e => { if(e.key==='Enter') goAvatarStep(); });
-  load(); render();
+// ── Init ──────────────────────────────────────────────
+document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')goAvatarStep();});
+initFirebase();
 </script>
 </body>
 </html>
