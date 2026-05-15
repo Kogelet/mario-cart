@@ -124,6 +124,7 @@
     .pcard:not(.r1) .c-stat.gold   .st-num{color:#FFD700;}
     .pcard:not(.r1) .c-stat.silver .st-num{color:#C0C0C0;}
     .pcard:not(.r1) .c-stat.bronze .st-num{color:#CD7F32;}
+    .pcard:not(.r1) .c-stat.pred   .st-num{color:#c084fc;}
     .c-stat.dim .st-num{opacity:.25;}
 
     /* Score */
@@ -597,6 +598,7 @@
         <div class="c-stat gold  ${p.places[1]?'':'dim'}"><span class="st-icon">🥇</span><span class="st-num">${p.places[1]}</span></div>
         <div class="c-stat silver${p.places[2]?'':'dim'}"><span class="st-icon">🥈</span><span class="st-num">${p.places[2]}</span></div>
         <div class="c-stat bronze${p.places[3]?'':'dim'}"><span class="st-icon">🥉</span><span class="st-num">${p.places[3]}</span></div>
+        <div class="c-stat pred  ${(p.predictions||0)?'':'dim'}"><span class="st-icon">⭐</span><span class="st-num">${p.predictions||0}</span></div>
         <div class="c-score">${p.points}</div>
       </div>`;
     }).join('');
